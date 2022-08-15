@@ -22,10 +22,15 @@ func init() {
 type Config struct {
 	Port                     string
 	Env                      string
-	AccessTokenJwtSecretKey  string
-	RefreshTokenJwtSecretKey string
+	JwtSecretKey             string
 	AccessTokenJwtExpiresIn  string
 	RefreshTokenJwtExpiresIn string
+	DbName                   string
+	DbHost                   string
+	DbPort                   string
+	DbUser                   string
+	DbPassword               string
+	MongoDbConnUri           string
 }
 
 // New() creates a new Config struct with the loaded environment variables
@@ -33,10 +38,15 @@ func New() *Config {
 	return &Config{
 		Port:                     getEnv("PORT", "1323"),
 		Env:                      getEnv("ENV", "development"),
-		AccessTokenJwtSecretKey:  getEnv("ACCESS_TOKEN_JWT_SECRET_KEY", ""),
-		RefreshTokenJwtSecretKey: getEnv("REFRESH_TOKEN_JWT_SECRET_KEY", ""),
+		JwtSecretKey:             getEnv("JWT_SECRET_KEY", ""),
 		AccessTokenJwtExpiresIn:  getEnv("ACCESS_TOKEN_JWT_EXPIRES_IN", "15m"),
 		RefreshTokenJwtExpiresIn: getEnv("REFRESH_TOKEN_JWT_EXPIRES_IN", "7d"),
+		DbHost:                   getEnv("MONGODB_HOST", ""),
+		DbPort:                   getEnv("MONGODB_PORT", ""),
+		DbUser:                   getEnv("MONGODB_USER", ""),
+		DbPassword:               getEnv("MONGODB_PASSWORD", ""),
+		DbName:                   getEnv("MONGODB_NAME", "keeper"),
+		MongoDbConnUri:           getEnv("MONGODB_CONN_URI", ""),
 	}
 }
 
