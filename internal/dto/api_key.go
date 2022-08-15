@@ -21,7 +21,13 @@ type UpdateAPIKeyInputDTO struct {
 }
 
 type CreateAPIKeyOutputDTO struct {
+	Id        primitive.ObjectID `json:"id"`
 	Name      string             `json:"name"`
 	Key       string             `json:"key"`
+	ExpiresAt primitive.DateTime `json:"expires_at"`
 	CreatedAt primitive.DateTime `json:"created_at"`
+}
+
+type APIKeysIDsInputDTO struct {
+	Ids []string `json:"ids"`
 }

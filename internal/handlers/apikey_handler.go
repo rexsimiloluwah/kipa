@@ -60,7 +60,7 @@ func (h *APIKeyHandler) FindAPIKeyByID(c echo.Context) error {
 func (h *APIKeyHandler) FindUserAPIKeys(c echo.Context) error {
 	// retrieve the user from context
 	user := c.Get("user").(*models.User)
-	apiKeys, err := h.APIKeySvc.FindUserAPIKeys(user.ID.String())
+	apiKeys, err := h.APIKeySvc.FindUserAPIKeys(user.ID.Hex())
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{"status": false, "error": err.Error()})
 	}
@@ -84,12 +84,12 @@ func (h *APIKeyHandler) UpdateAPIKey(c echo.Context) error {
 }
 
 func (h *APIKeyHandler) RevokeAPIKeys(c echo.Context) error {
-	apiKeyIds := make([]string, 0)
+	apiKeyIds := new(dto.APIKeysIDsInputDTO)
 	if err := c.Bind(apiKeyIds); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{"status": false, "error": err.Error()})
 	}
 
-	err := h.APIKeySvc.RevokeAPIKeys(apiKeyIds)
+	err := h.APIKeySvc.RevokeAPIKeys(apiKeyIds.Ids)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{"status": false, "error": err.Error()})
 	}
@@ -98,12 +98,12 @@ func (h *APIKeyHandler) RevokeAPIKeys(c echo.Context) error {
 }
 
 func (h *APIKeyHandler) DeleteAPIKeys(c echo.Context) error {
-	apiKeyIds := make([]string, 0)
+	apiKeyIds := new(dto.APIKeysIDsInputDTO)
 	if err := c.Bind(apiKeyIds); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{"status": false, "error": err.Error()})
 	}
 
-	err := h.APIKeySvc.DeleteAPIKeys(apiKeyIds)
+	err := h.APIKeySvc.DeleteAPIKeys(apiKeyIds.Ids)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{"status": false, "error": err.Error()})
 	}

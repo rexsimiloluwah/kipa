@@ -24,6 +24,7 @@ var userDetailsProjection = bson.D{
 	primitive.E{Key: "lastname", Value: 1},
 	primitive.E{Key: "email", Value: 1},
 	primitive.E{Key: "role", Value: 1},
+	primitive.E{Key: "username", Value: 1},
 	primitive.E{Key: "password", Value: 1},
 	primitive.E{Key: "email_verified", Value: 1},
 	primitive.E{Key: "created_at", Value: 1},
@@ -127,13 +128,10 @@ func (r *UserRepository) UpdateUser(user *models.User) error {
 	}
 
 	opts := options.Update().SetUpsert(true)
-	result, err := r.collection.UpdateOne(r.ctx, filter, bson.D{primitive.E{Key: "$set", Value: update}}, opts)
+	_, err = r.collection.UpdateOne(r.ctx, filter, bson.D{primitive.E{Key: "$set", Value: update}}, opts)
 	if err != nil {
 		logrus.WithError(err).Error("error updating user")
 		return err
-	}
-	if result.UpsertedCount == 0 {
-		return models.ErrUpdatingUser
 	}
 	return nil
 }

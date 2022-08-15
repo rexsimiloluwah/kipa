@@ -6,12 +6,12 @@ import "go.mongodb.org/mongo-driver/bson/primitive"
 type APIKey struct {
 	ID        primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 	UserID    primitive.ObjectID `bson:"user_id,omitempty" json:"user_id"`
-	MaskID    string             `bson:"mask_id,omitempty" json:"mask_id"`
+	MaskID    string             `bson:"mask_id,omitempty" json:"-"`
 	Name      string             `bson:"name,omitempty" json:"name"`
-	Salt      string             `bson:"salt,omitempty" json:"salt"`
-	Hash      string             `bson:"hash,omitempty" json:"hash"`
+	Salt      string             `bson:"salt,omitempty" json:"-"`
+	Hash      string             `bson:"hash,omitempty" json:"-"`
 	Revoked   bool               `bson:"revoked,omitempty" json:"revoked"`
-	Key       string             `bson:"key,omitempty" json:"key"`
+	Key       string             `bson:"key,omitempty" json:"key,omitempty"`
 	KeyType   string             `bson:"key_type,omitempty" json:"key_type"`
 	Role      string             `bson:"role,omitempty" json:"role"`
 	ExpiresAt primitive.DateTime `bson:"expires_at,omitempty" json:"expires_at"`

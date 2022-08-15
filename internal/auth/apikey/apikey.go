@@ -49,7 +49,6 @@ func (a *APIKeyService) Authenticate(credential *auth.Credential) (*auth.AuthRes
 	maskID := keySplit[1]
 	// find the API Key
 	apiKey, err := a.apiKeyRepository.FindAPIKeyByMaskID(maskID)
-	fmt.Print(apiKey, maskID)
 	if err != nil {
 		return nil, fmt.Errorf("api key is incorrect: %s", err.Error())
 	}
@@ -78,7 +77,7 @@ func (a *APIKeyService) Authenticate(credential *auth.Credential) (*auth.AuthRes
 	}
 
 	// get the user payload
-	user, err := a.userRepository.FindUserById(apiKey.UserID.String())
+	user, err := a.userRepository.FindUserById(apiKey.UserID.Hex())
 	if err != nil {
 		return nil, models.ErrUserNotFound
 	}

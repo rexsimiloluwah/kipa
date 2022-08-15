@@ -3,6 +3,7 @@ package handlers
 import (
 	"keeper/internal/config"
 	"keeper/internal/dto"
+	"keeper/internal/models"
 	"keeper/internal/services"
 	"net/http"
 
@@ -67,9 +68,9 @@ func (u *UserHandler) UpdateUser(c echo.Context) error {
 	if err := c.Bind(data); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{"status": false, "error": err.Error()})
 	}
-	// fetch user id from context
-	userId := c.Get("userId").(string)
-	err := u.userSvc.UpdateUser(userId, *data)
+	// retrieve user from context
+	user := c.Get("user").(*models.User)
+	err := u.userSvc.UpdateUser(user.ID.Hex(), *data)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{"status": false, "error": err.Error()})
 	}
@@ -77,8 +78,9 @@ func (u *UserHandler) UpdateUser(c echo.Context) error {
 }
 
 func (u *UserHandler) DeleteUser(c echo.Context) error {
-	userId := c.Get("userId").(string)
-	err := u.userSvc.DeleteUser(userId)
+	// retrieve user from context
+	user := c.Get("user").(*models.User)
+	err := u.userSvc.DeleteUser(user.ID.Hex())
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{"status": false, "error": err.Error()})
 	}

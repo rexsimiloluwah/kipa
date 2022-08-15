@@ -24,7 +24,7 @@ type APIKeyRepository struct {
 }
 
 type IAPIKeyRepository interface {
-	CreateAPIKey(apiKey *models.APIKey) error
+	CreateAPIKey(apiKey *models.APIKey) (primitive.ObjectID, error)
 	UpdateAPIKey(apiKey *models.APIKey) error
 	FindAPIKeyByID(apiKeyID string) (*models.APIKey, error)
 	FindAPIKeyByMaskID(maskID string) (*models.APIKey, error)
@@ -43,6 +43,9 @@ var apiKeyDetailsProjection = bson.D{
 	primitive.E{Key: "user_id", Value: 1},
 	primitive.E{Key: "role", Value: 1},
 	primitive.E{Key: "key", Value: 1},
+	primitive.E{Key: "mask_id", Value: 1},
+	primitive.E{Key: "salt", Value: 1},
+	primitive.E{Key: "hash", Value: 1},
 	primitive.E{Key: "revoked", Value: 1},
 	primitive.E{Key: "expires_at", Value: 1},
 	primitive.E{Key: "created_at", Value: 1},
@@ -70,23 +73,19 @@ func mapIDsToObjectIDs(ids []string) ([]primitive.ObjectID, error) {
 	return objectIDs, nil
 }
 
-func (r *APIKeyRepository) CreateAPIKey(apiKey *models.APIKey) error {
-	_, err := r.collection.InsertOne(r.ctx, apiKey)
+func (r *APIKeyRepository) CreateAPIKey(apiKey *models.APIKey) (primitive.ObjectID, error) {
+	result, err := r.collection.InsertOne(r.ctx, apiKey)
 	if err != nil {
 		logrus.WithError(err).Error("error creating api key")
-		return fmt.Errorf("error creating api key: %s", err.Error())
+		return primitive.ObjectID{}, fmt.Errorf("error creating api key: %s", err.Error())
 	}
-	return nil
+	return result.InsertedID.(primitive.ObjectID), nil
 }
 
 // Returns a single API Key by a specific key name i.e. _id, mask_id, hash etc.
 func (r *APIKeyRepository) FindAPIKeyByKeyName(key string, value string) (*models.APIKey, error) {
 	apiKey := &models.APIKey{}
-	ID, err := primitive.ObjectIDFromHex(value)
-	if err != nil {
-		return nil, models.ErrInvalidObjectID
-	}
-	filter := bson.D{primitive.E{Key: key, Value: ID}}
+	filter := bson.D{primitive.E{Key: key, Value: value}}
 	opts := options.FindOne().SetProjection(apiKeyDetailsProjection)
 	if err := r.collection.FindOne(r.ctx, filter, opts).Decode(apiKey); err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
@@ -99,7 +98,21 @@ func (r *APIKeyRepository) FindAPIKeyByKeyName(key string, value string) (*model
 }
 
 func (r *APIKeyRepository) FindAPIKeyByID(id string) (*models.APIKey, error) {
-	return r.FindAPIKeyByKeyName("_id", id)
+	apiKey := &models.APIKey{}
+	ID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, models.ErrInvalidObjectID
+	}
+	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
+	opts := options.FindOne().SetProjection(apiKeyDetailsProjection)
+	if err := r.collection.FindOne(r.ctx, filter, opts).Decode(apiKey); err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, models.ErrAPIKeyNotFound
+		}
+		return nil, err
+	}
+	logrus.Info("found API Key: ", apiKey)
+	return apiKey, nil
 }
 
 func (r *APIKeyRepository) FindAPIKeyByMaskID(maskID string) (*models.APIKey, error) {
@@ -144,13 +157,10 @@ func (r *APIKeyRepository) UpdateAPIKey(apiKey *models.APIKey) error {
 	}
 
 	opts := options.Update().SetUpsert(true)
-	result, err := r.collection.UpdateOne(r.ctx, filter, bson.D{primitive.E{Key: "$set", Value: update}}, opts)
+	_, err = r.collection.UpdateOne(r.ctx, filter, bson.D{primitive.E{Key: "$set", Value: update}}, opts)
 	if err != nil {
 		logrus.WithError(err).Error("error updating api key")
 		return err
-	}
-	if result.UpsertedCount == 0 {
-		return models.ErrUpdatingUser
 	}
 	return nil
 }
@@ -160,13 +170,10 @@ func (r *APIKeyRepository) RevokeAPIKey(apiKeyID string) error {
 	// create update query
 	update := bson.D{primitive.E{Key: "$set", Value: bson.D{primitive.E{Key: "revoked", Value: true}}}}
 	opts := options.Update().SetUpsert(true)
-	result, err := r.collection.UpdateOne(r.ctx, filter, update, opts)
+	_, err := r.collection.UpdateOne(r.ctx, filter, update, opts)
 	if err != nil {
 		logrus.WithError(err).Error("error revoking api key")
 		return err
-	}
-	if result.UpsertedCount == 0 {
-		return models.ErrRevokingAPIKey
 	}
 	return nil
 }
@@ -176,16 +183,13 @@ func (r *APIKeyRepository) RevokeAPIKeys(apiKeyIDs []string) error {
 	if err != nil {
 		return errors.New("invalid api key object id")
 	}
-	filter := bson.D{primitive.E{Key: "_id", Value: primitive.E{Key: "$in", Value: objectIDs}}}
+	filter := bson.D{primitive.E{Key: "_id", Value: bson.D{primitive.E{Key: "$in", Value: objectIDs}}}}
 	// create update query
 	update := bson.D{primitive.E{Key: "$set", Value: bson.D{primitive.E{Key: "revoked", Value: true}}}}
 	opts := options.Update().SetUpsert(true)
-	result, err := r.collection.UpdateOne(r.ctx, filter, update, opts)
+	_, err = r.collection.UpdateMany(r.ctx, filter, update, opts)
 	if err != nil {
 		logrus.WithError(err).Error("error revoking api keys")
-		return models.ErrRevokingAPIKeys
-	}
-	if result.UpsertedCount == 0 {
 		return models.ErrRevokingAPIKeys
 	}
 	return nil
@@ -216,12 +220,13 @@ func (r *APIKeyRepository) DeleteAPIKeys(apiKeyIDs []string) error {
 	if err != nil {
 		return err
 	}
-	filter := bson.D{primitive.E{Key: "_id", Value: primitive.E{Key: "$in", Value: objectIDs}}}
-	result, err := r.collection.DeleteOne(r.ctx, filter)
+	filter := bson.D{primitive.E{Key: "_id", Value: bson.D{primitive.E{Key: "$in", Value: objectIDs}}}}
+	result, err := r.collection.DeleteMany(r.ctx, filter, nil)
 	if err != nil {
 		logrus.WithError(err).Error("error deleting api keys")
 		return models.ErrDeletingAPIKeys
 	}
+	logrus.Debug(result.DeletedCount)
 	if result.DeletedCount == 0 {
 		return models.ErrDeletingAPIKeys
 	}

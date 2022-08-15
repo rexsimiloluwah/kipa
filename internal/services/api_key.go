@@ -44,7 +44,7 @@ func NewAPIKeyService(cfg *config.Config, dbClient *mongo.Client) IAPIKeyService
 func (a *APIKeyService) CreateAPIKey(data dto.CreateAPIKeyInputDTO, userID primitive.ObjectID) (dto.CreateAPIKeyOutputDTO, error) {
 	// check expiry date of the API Key
 	if data.ExpiresAt.Before(time.Now()) {
-		return dto.CreateAPIKeyOutputDTO{}, errors.New("api key expires_at is invalid")
+		return dto.CreateAPIKeyOutputDTO{}, errors.New("api key expires_at cannot be before now")
 	}
 	// Generate mask and key
 	maskID, key := utils.GenerateAPIKey()
@@ -74,16 +74,18 @@ func (a *APIKeyService) CreateAPIKey(data dto.CreateAPIKeyInputDTO, userID primi
 	}
 
 	// save to database
-	err = a.ApiKeyRepository.CreateAPIKey(newAPIKey)
+	id, err := a.ApiKeyRepository.CreateAPIKey(newAPIKey)
 	if err != nil {
 		logrus.WithError(err).Error("could not save api key to database")
 		return dto.CreateAPIKeyOutputDTO{}, err
 	}
 
 	return dto.CreateAPIKeyOutputDTO{
+		Id:        id,
 		Name:      data.Name,
 		Key:       key,
 		CreatedAt: newAPIKey.CreatedAt,
+		ExpiresAt: newAPIKey.ExpiresAt,
 	}, nil
 }
 

@@ -45,7 +45,6 @@ func (m *Middleware) RequireAuth(next echo.HandlerFunc) echo.HandlerFunc {
 			logrus.WithError(err).Errorf("error authenticating user with type: %s", cred.Type.String())
 			return echo.ErrUnauthorized
 		}
-		logrus.Debug(authResponse)
 		c.Set("user", authResponse.User)
 		return next(c)
 	}

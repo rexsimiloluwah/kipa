@@ -34,13 +34,20 @@ func InitUserRoutes(s *Server) {
 }
 
 func InitAPIKeyRoutes(s *Server) {
-	apiKeyRoutes := s.Server.Group("/api/v1/api_keys")
+	apiKeysRoutes := s.Server.Group("/api/v1/api_keys")
+	apiKeyRoutes := s.Server.Group("/api/v1/api_key")
+	protectedAPIKeyRoutes := apiKeyRoutes.Group("")
 	{
-		apiKeyRoutes.Use(s.Middlewares.RequireAuth)
-		apiKeyRoutes.POST("", s.Handler.APIKeyHandler.CreateAPIKey)
-		apiKeyRoutes.GET("/:apiKeyId", s.Handler.APIKeyHandler.FindAPIKeyByID)
-		apiKeyRoutes.PUT("/:apiKeyId", s.Handler.APIKeyHandler.UpdateAPIKey)
-		apiKeyRoutes.PUT("/revoke", s.Handler.APIKeyHandler.RevokeAPIKeys)
-		apiKeyRoutes.DELETE("", s.Handler.APIKeyHandler.DeleteAPIKeys)
+		protectedAPIKeyRoutes.Use(s.Middlewares.RequireAuth)
+		protectedAPIKeyRoutes.GET("/:apiKeyId", s.Handler.APIKeyHandler.FindAPIKeyByID)
+		protectedAPIKeyRoutes.POST("", s.Handler.APIKeyHandler.CreateAPIKey)
+		protectedAPIKeyRoutes.PUT("/:apiKeyId", s.Handler.APIKeyHandler.UpdateAPIKey)
+	}
+	protectedAPIKeysRoutes := apiKeysRoutes.Group("")
+	{
+		protectedAPIKeysRoutes.Use(s.Middlewares.RequireAuth)
+		protectedAPIKeysRoutes.GET("", s.Handler.APIKeyHandler.FindUserAPIKeys)
+		protectedAPIKeysRoutes.PUT("/revoke", s.Handler.APIKeyHandler.RevokeAPIKeys)
+		protectedAPIKeysRoutes.DELETE("", s.Handler.APIKeyHandler.DeleteAPIKeys)
 	}
 }
