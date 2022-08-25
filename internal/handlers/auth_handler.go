@@ -4,6 +4,7 @@ import (
 	"keeper/internal/config"
 	"keeper/internal/dto"
 	"keeper/internal/models"
+	"keeper/internal/repository"
 	"keeper/internal/services"
 	"net/http"
 
@@ -23,7 +24,8 @@ type IAuthHandler interface {
 
 func NewAuthHandler(dbClient *mongo.Client) IAuthHandler {
 	cfg := config.New()
-	authService := services.NewAuthService(cfg, dbClient)
+	userRepo := repository.NewUserRepository(cfg, dbClient)
+	authService := services.NewAuthService(cfg, userRepo)
 	return &AuthHandler{
 		AuthSvc: authService,
 	}

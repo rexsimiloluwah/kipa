@@ -4,6 +4,7 @@ import (
 	"keeper/internal/config"
 	"keeper/internal/dto"
 	"keeper/internal/models"
+	"keeper/internal/repository"
 	"keeper/internal/services"
 	"net/http"
 
@@ -26,7 +27,8 @@ type IAPIKeyHandler interface {
 
 func NewAPIKeyHandler(dbClient *mongo.Client) IAPIKeyHandler {
 	cfg := config.New()
-	apiKeyService := services.NewAPIKeyService(cfg, dbClient)
+	apiKeyRepo := repository.NewAPIKeyRepository(cfg, dbClient)
+	apiKeyService := services.NewAPIKeyService(cfg, apiKeyRepo)
 	return &APIKeyHandler{
 		APIKeySvc: apiKeyService,
 	}

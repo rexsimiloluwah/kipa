@@ -10,12 +10,12 @@ import (
 )
 
 // init is invoked on load
-func init() {
-	// loads values from .env
-	if err := godotenv.Load(); err != nil {
-		log.Fatalf("Could not load environment variables.")
-	}
-}
+// func init() {
+// 	// loads values from .env
+// 	if err := godotenv.Load(); err != nil {
+// 		log.Fatalf("Could not load environment variables.")
+// 	}
+// }
 
 // config struct is used to store the loaded environment variables
 
@@ -35,6 +35,9 @@ type Config struct {
 
 // New() creates a new Config struct with the loaded environment variables
 func New() *Config {
+	if err := godotenv.Load(); err != nil {
+		log.Fatalf("Could not load environment variables.")
+	}
 	return &Config{
 		Port:                     getEnv("PORT", "1323"),
 		Env:                      getEnv("ENV", "development"),
@@ -65,7 +68,7 @@ func getEnv(key string, defaultValue string) string {
 func getEnvAsInt(key string, defaultValue int) int {
 	valueStr := getEnv(key, "")
 	// convert the string value to an integer
-	if value, err := strconv.Atoi(valueStr); err != nil {
+	if value, err := strconv.Atoi(valueStr); err != nil && valueStr != "" {
 		return value
 	}
 	return defaultValue
@@ -76,7 +79,7 @@ func getEnvAsInt(key string, defaultValue int) int {
 func getEnvAsBool(key string, defaultValue bool) bool {
 	valueStr := getEnv(key, "")
 	// convert string value to a boolean
-	if value, err := strconv.ParseBool(valueStr); err != nil {
+	if value, err := strconv.ParseBool(valueStr); err != nil && valueStr != "" {
 		return value
 	}
 	return defaultValue
@@ -87,7 +90,7 @@ func getEnvAsBool(key string, defaultValue bool) bool {
 func getEnvAsFloat(key string, defaultValue float64) float64 {
 	valueStr := getEnv(key, "")
 	// convert string value to float32
-	if value, err := strconv.ParseFloat(valueStr, 64); err != nil {
+	if value, err := strconv.ParseFloat(valueStr, 64); err != nil && valueStr != "" {
 		return value
 	}
 	return defaultValue

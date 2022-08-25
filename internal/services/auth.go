@@ -10,7 +10,6 @@ import (
 	"keeper/internal/utils"
 
 	"github.com/sirupsen/logrus"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type AuthService struct {
@@ -24,26 +23,37 @@ type IAuthService interface {
 	RefreshToken(user *models.User) (*dto.RefreshTokenOutputDTO, error)
 }
 
-func NewAuthService(cfg *config.Config, dbClient *mongo.Client) IAuthService {
-	userRepository := repository.NewUserRepository(cfg, dbClient)
-	jwtSvc := jwt.NewJwtService(cfg, userRepository)
+func NewAuthService(cfg *config.Config, userRepo repository.IUserRepository) IAuthService {
+	jwtSvc := jwt.NewJwtService(cfg, userRepo)
 	return &AuthService{
-		UserRepository: userRepository,
+		UserRepository: userRepo,
 		Cfg:            cfg,
 		JwtSvc:         jwtSvc,
 	}
 }
 
+// error constants
+var (
+	ErrEmailIsEmpty    = errors.New("email cannot be empty")
+	ErrPasswordIsEmpty = errors.New("password cannot be empty")
+)
+
 // Login user
 // returns access and refresh token
 func (a *AuthService) Login(data dto.LoginUserInputDTO) (*dto.LoginUserOutputDTO, error) {
+	if utils.IsStringEmpty(data.Email) {
+		return &dto.LoginUserOutputDTO{}, ErrEmailIsEmpty
+	}
+	if utils.IsStringEmpty(data.Password) {
+		return &dto.LoginUserOutputDTO{}, ErrPasswordIsEmpty
+	}
 	// find the user assigned to input email
 	user, err := a.UserRepository.FindUserByEmail(data.Email)
 	if err != nil && !errors.Is(err, models.ErrUserNotFound) {
 		return &dto.LoginUserOutputDTO{}, err
 	}
 	if user == nil {
-		return &dto.LoginUserOutputDTO{}, errors.New("user not found")
+		return &dto.LoginUserOutputDTO{}, models.ErrUserNotFound
 	}
 
 	// compare passwords
@@ -73,6 +83,12 @@ func (a *AuthService) Login(data dto.LoginUserInputDTO) (*dto.LoginUserOutputDTO
 // Refresh token
 // returns a refreshed access token
 func (a *AuthService) RefreshToken(user *models.User) (*dto.RefreshTokenOutputDTO, error) {
+	if utils.IsStringEmpty(user.Email) {
+		return &dto.RefreshTokenOutputDTO{}, ErrEmailIsEmpty
+	}
+	if utils.IsStringEmpty(user.Password) {
+		return &dto.RefreshTokenOutputDTO{}, ErrPasswordIsEmpty
+	}
 	payload := map[string]interface{}{"id": user.ID, "email": user.Email}
 	accessToken, err := a.JwtSvc.GenerateAccessToken(payload)
 	if err != nil {

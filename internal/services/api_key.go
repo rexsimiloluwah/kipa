@@ -14,7 +14,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/xdg-go/pbkdf2"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type APIKeyService struct {
@@ -33,11 +32,10 @@ type IAPIKeyService interface {
 	DeleteAPIKeys(ids []string) error
 }
 
-func NewAPIKeyService(cfg *config.Config, dbClient *mongo.Client) IAPIKeyService {
-	apiKeyRepository := repository.NewAPIKeyRepository(cfg, dbClient)
+func NewAPIKeyService(cfg *config.Config, apiKeyRepo repository.IAPIKeyRepository) IAPIKeyService {
 	return &APIKeyService{
 		Cfg:              cfg,
-		ApiKeyRepository: apiKeyRepository,
+		ApiKeyRepository: apiKeyRepo,
 	}
 }
 
@@ -81,7 +79,7 @@ func (a *APIKeyService) CreateAPIKey(data dto.CreateAPIKeyInputDTO, userID primi
 	}
 
 	return dto.CreateAPIKeyOutputDTO{
-		Id:        id,
+		ID:        id,
 		Name:      data.Name,
 		Key:       key,
 		CreatedAt: newAPIKey.CreatedAt,

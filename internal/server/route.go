@@ -51,3 +51,34 @@ func InitAPIKeyRoutes(s *Server) {
 		protectedAPIKeysRoutes.DELETE("", s.Handler.APIKeyHandler.DeleteAPIKeys)
 	}
 }
+
+func InitBucketRoutes(s *Server) {
+	bucketRoutes := s.Server.Group("/api/v1/bucket")
+	bucketsRoutes := s.Server.Group("/api/v1/buckets")
+	protectedBucketRoutes := bucketRoutes.Group("")
+	{
+		protectedBucketRoutes.Use(s.Middlewares.RequireAuth)
+		protectedBucketRoutes.POST("", s.Handler.BucketHandler.CreateBucket)
+		protectedBucketRoutes.GET("/:bucketUID", s.Handler.BucketHandler.FindBucketByUID)
+		protectedBucketRoutes.PUT("/:bucketUID", s.Handler.BucketHandler.UpdateBucket)
+		protectedBucketRoutes.DELETE("/:bucketUID", s.Handler.BucketHandler.DeleteBucket)
+	}
+	protectedBucketsRoutes := bucketsRoutes.Group("")
+	{
+		protectedBucketsRoutes.Use(s.Middlewares.RequireAuth)
+		protectedBucketsRoutes.GET("", s.Handler.BucketHandler.ListUserBuckets)
+	}
+}
+
+func InitBucketItemRoutes(s *Server) {
+	bucketItemRoutes := s.Server.Group("/api/v1/item")
+	protectedBucketItemRoutes := bucketItemRoutes.Group("")
+	{
+		protectedBucketItemRoutes.Use(s.Middlewares.RequireAuth)
+		protectedBucketItemRoutes.POST("/:bucketUID", s.Handler.BucketItemHandler.CreateBucketItem)
+		protectedBucketItemRoutes.GET("/:bucketUID", s.Handler.BucketItemHandler.ListBucketItems)
+		protectedBucketItemRoutes.GET("/:bucketUID/:key", s.Handler.BucketItemHandler.FindBucketItemByKeyName)
+		protectedBucketItemRoutes.PUT("/:bucketUID/:key", s.Handler.BucketItemHandler.UpdateBucketItemByKeyName)
+		protectedBucketItemRoutes.DELETE("/:bucketUID/:key", s.Handler.BucketItemHandler.DeleteBucketItemByKeyName)
+	}
+}

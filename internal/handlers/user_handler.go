@@ -4,6 +4,7 @@ import (
 	"keeper/internal/config"
 	"keeper/internal/dto"
 	"keeper/internal/models"
+	"keeper/internal/repository"
 	"keeper/internal/services"
 	"net/http"
 
@@ -25,7 +26,8 @@ type UserHandler struct {
 
 func NewUserHandler(dbClient *mongo.Client) IUserHandler {
 	cfg := config.New()
-	userService := services.NewUserService(cfg, dbClient)
+	userRepo := repository.NewUserRepository(cfg, dbClient)
+	userService := services.NewUserService(cfg, userRepo)
 	return &UserHandler{
 		userSvc: userService,
 	}

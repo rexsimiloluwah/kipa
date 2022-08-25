@@ -35,6 +35,10 @@ type JwtService struct {
 	UserRepository repository.IUserRepository
 }
 
+var (
+	ErrInvalidExpiresIn = errors.New("invalid expires in duration")
+)
+
 func NewJwtService(cfg *config.Config, userRepository repository.IUserRepository) IJwtService {
 	return &JwtService{
 		Cfg:            cfg,
@@ -60,6 +64,8 @@ func parseExpiresInTime(expiresInStr string) (int64, error) {
 		result = time.Now().Add(time.Minute * time.Duration(durationNum)).Unix()
 	case 'd':
 		result = time.Now().Add(24 * time.Hour * time.Duration(durationNum)).Unix()
+	default:
+		return 0, errors.New("could not decode expires in")
 	}
 	return result, nil
 }
@@ -69,7 +75,7 @@ func (jwtSrv *JwtService) GenerateToken(payload map[string]interface{}, expiresI
 	expiresInUnix, err := parseExpiresInTime(expiresIn)
 	if err != nil {
 		logrus.Error("expires in is invalid")
-		return "", err
+		return "", ErrInvalidExpiresIn
 	}
 	// initialize the JWT claims
 	jwtClaims := &JwtCustomClaims{
@@ -87,7 +93,7 @@ func (jwtSrv *JwtService) GenerateToken(payload map[string]interface{}, expiresI
 	// generated the encoded token using the secret key
 	encodedToken, err := token.SignedString([]byte(secret))
 	if err != nil {
-		logrus.Error("encoded token could not be generated: %s", err.Error())
+		logrus.Errorf("encoded token could not be generated: %s", err.Error())
 		return "", err
 	}
 

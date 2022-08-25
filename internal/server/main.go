@@ -47,6 +47,8 @@ func (s *Server) RegisterRoutes() {
 	InitAuthRoutes(s)
 	InitUserRoutes(s)
 	InitAPIKeyRoutes(s)
+	InitBucketRoutes(s)
+	InitBucketItemRoutes(s)
 }
 
 // TODO: Add graceful shutdown

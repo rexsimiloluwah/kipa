@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"errors"
-	"fmt"
 	"keeper/internal/auth"
 	"keeper/internal/models"
 	"keeper/internal/repository"
@@ -32,17 +31,28 @@ func NewAPIKeyService(apiKeyRepository repository.IAPIKeyRepository, userReposit
 	}
 }
 
+// error constants
+var (
+	ErrInvalidAPIKeyLength      = errors.New("invalid api key length")
+	ErrAPIKeyDoesNotExist       = errors.New("api key does not exist")
+	ErrFailedToDecodeAPIKeyHash = errors.New("failed to decode api key hash")
+	ErrInvalidAPIKey            = errors.New("invalid api key")
+	ErrExpiredAPIKey            = errors.New("api key is expired")
+	ErrRevokedAPIKey            = errors.New("api key is revoked")
+	ErrAPIKeyCredentialType     = errors.New("credential must be of api key type")
+)
+
 // Authenticate an API Key
 func (a *APIKeyService) Authenticate(credential *auth.Credential) (*auth.AuthResponse, error) {
 	if credential.Type != auth.CredentialTypeAPIKey {
-		return nil, errors.New("credential must be of api key type")
+		return nil, ErrAPIKeyCredentialType
 	}
 
 	key := credential.APIKey
 	keySplit := strings.Split(key, utils.APIKeySeperator)
 	// validate that the length = 3
 	if len(keySplit) != 3 {
-		return nil, errors.New("invalid api key")
+		return nil, ErrInvalidAPIKeyLength
 	}
 
 	// obtain the mask ID
@@ -50,30 +60,30 @@ func (a *APIKeyService) Authenticate(credential *auth.Credential) (*auth.AuthRes
 	// find the API Key
 	apiKey, err := a.apiKeyRepository.FindAPIKeyByMaskID(maskID)
 	if err != nil {
-		return nil, fmt.Errorf("api key is incorrect: %s", err.Error())
+		return nil, ErrAPIKeyDoesNotExist
 	}
 
 	// decode the API Key
 	decodedKey, err := base64.URLEncoding.DecodeString(apiKey.Hash)
 	if err != nil {
-		return nil, fmt.Errorf("failed to decode api key hash: %s", err.Error())
+		return nil, ErrFailedToDecodeAPIKeyHash
 	}
 
 	// compute hash and compare
 	dk := pbkdf2.Key([]byte(credential.APIKey), []byte(apiKey.Salt), 4096, 32, sha256.New)
 	if !bytes.Equal(dk, decodedKey) {
 		// mismatch
-		return nil, errors.New("invalid api key")
+		return nil, ErrInvalidAPIKey
 	}
 
 	// current time > apiKey expires at time? api key is expired
 	if apiKey.ExpiresAt != 0 && time.Now().After(apiKey.ExpiresAt.Time()) {
-		return nil, errors.New("api key is expired")
+		return nil, ErrExpiredAPIKey
 	}
 
 	// check if the api key has been revoked or not
 	if apiKey.Revoked {
-		return nil, errors.New("api key has been revoked")
+		return nil, ErrRevokedAPIKey
 	}
 
 	// get the user payload

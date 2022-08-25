@@ -31,15 +31,6 @@ var userDetailsProjection = bson.D{
 	primitive.E{Key: "updated_at", Value: 1},
 }
 
-type IUserRepository interface {
-	CreateUser(user *models.User) error
-	FindUserByEmail(email string) (*models.User, error)
-	FindUserById(id string) (*models.User, error)
-	FindAllUsers() ([]models.User, error)
-	UpdateUser(user *models.User) error
-	DeleteUser(userId string) error
-}
-
 type UserRepository struct {
 	collection *mongo.Collection
 	ctx        context.Context
@@ -57,7 +48,7 @@ func NewUserRepository(cfg *config.Config, dbClient *mongo.Client) IUserReposito
 func (r *UserRepository) CreateUser(user *models.User) error {
 	_, err := r.collection.InsertOne(r.ctx, user)
 	if err != nil {
-		logrus.Errorf("error creating user: %s", err.Error())
+		logrus.WithError(err).Error("error creating user")
 		return fmt.Errorf("error creating user: %s", err.Error())
 	}
 	return nil
@@ -116,22 +107,23 @@ func (r *UserRepository) FindAllUsers() ([]models.User, error) {
 	return users, nil
 }
 
+// Update a user's account details
 func (r *UserRepository) UpdateUser(user *models.User) error {
 	filter := bson.D{primitive.E{Key: "_id", Value: user.ID}}
 	uByte, err := bson.Marshal(user)
 	if err != nil {
-		return errors.New("error marshalling user")
+		return errors.New("error marshalling user data")
 	}
 	update := make(map[string]interface{}, 0)
 	if err = bson.Unmarshal(uByte, update); err != nil {
-		return errors.New("error unmarshalling update data")
+		return errors.New("error unmarshalling user update data")
 	}
 
 	opts := options.Update().SetUpsert(true)
 	_, err = r.collection.UpdateOne(r.ctx, filter, bson.D{primitive.E{Key: "$set", Value: update}}, opts)
 	if err != nil {
 		logrus.WithError(err).Error("error updating user")
-		return err
+		return models.ErrUpdatingUser
 	}
 	return nil
 }

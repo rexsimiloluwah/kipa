@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type UserService struct {
@@ -26,15 +25,20 @@ type IUserService interface {
 	DeleteUser(id string) error
 }
 
-func NewUserService(cfg *config.Config, dbClient *mongo.Client) IUserService {
-	userRepository := repository.NewUserRepository(cfg, dbClient)
+func NewUserService(cfg *config.Config, userRepo repository.IUserRepository) IUserService {
 	return &UserService{
-		UserRepository: userRepository,
+		UserRepository: userRepo,
 		Cfg:            cfg,
 	}
 }
 
 func (s *UserService) Register(data dto.CreateUserInputDTO) error {
+	if data.Email == "" {
+		return errors.New("email must not be empty")
+	}
+	if data.Password == "" {
+		return errors.New("password must not be empty")
+	}
 	existingUser, err := s.UserRepository.FindUserByEmail(data.Email)
 	// check if the user already exists
 	if err != nil && !errors.Is(err, models.ErrUserNotFound) {
