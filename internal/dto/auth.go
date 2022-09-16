@@ -1,8 +1,8 @@
 package dto
 
 type LoginUserInputDTO struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Email    string `json:"email" validate:"required,email" swaggertype:"string" example:"me@gmail.com"`
+	Password string `json:"password" validate:"required,password" swaggertype:"string" example:"********"`
 }
 
 type LoginUserOutputDTO struct {

@@ -116,7 +116,7 @@ func (r *BucketRepository) FindBucketsByUserID(userID string) ([]models.Bucket, 
 		return nil, models.ErrInvalidObjectID
 	}
 	filter := bson.D{primitive.E{Key: "user_id", Value: ID}}
-	opts := options.Find().SetProjection(bucketDetailsProjection)
+	opts := options.Find().SetProjection(bucketDetailsProjection).SetSort(bson.D{primitive.E{Key: "created_at", Value: -1}})
 	cursor, err := r.collection.Find(r.ctx, filter, opts)
 	if err != nil {
 		logrus.WithError(err).Errorf("cannot find many buckets")

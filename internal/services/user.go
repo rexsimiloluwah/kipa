@@ -22,6 +22,7 @@ type IUserService interface {
 	FindUserByID(id string) (*models.User, error)
 	FindAllUsers() ([]models.User, error)
 	UpdateUser(id string, data dto.UpdateUserInputDTO) error
+	UpdateUserPassword(id string, data dto.UpdateUserPasswordInputDTO) error
 	DeleteUser(id string) error
 }
 
@@ -90,6 +91,34 @@ func (s *UserService) UpdateUser(id string, data dto.UpdateUserInputDTO) error {
 		Firstname: data.Firstname,
 		Lastname:  data.Lastname,
 		Username:  data.Username,
+	}
+	ID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return models.ErrInvalidObjectID
+	}
+	user.ID = ID
+	user.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
+	if err := s.UserRepository.UpdateUser(user); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *UserService) UpdateUserPassword(id string, data dto.UpdateUserPasswordInputDTO) error {
+	// validation
+	if utils.IsStringEmpty(id) {
+		return ErrUserIDIsEmpty
+	}
+	if utils.IsStringEmpty(data.Password) {
+		return ErrPasswordIsEmpty
+	}
+	// hash the new password
+	hashedPassword, err := utils.HashPassword(data.Password)
+	if err != nil {
+		return err
+	}
+	user := &models.User{
+		Password: hashedPassword,
 	}
 	ID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {

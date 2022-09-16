@@ -1,6 +1,8 @@
 package models
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 // Bucket item struct
 type BucketItem struct {
@@ -10,6 +12,7 @@ type BucketItem struct {
 	BucketUID string             `bson:"bucket_uid,omitempty" json:"bucket_uid"`
 	Key       string             `bson:"key,omitempty" json:"key"`
 	Data      interface{}        `bson:"data,omitempty" json:"data"`
+	TTL       int                `bson:"ttl,omitempty" json:"ttl"`
 	CreatedAt primitive.DateTime `bson:"created_at,omitempty" json:"created_at"`
 	UpdatedAt primitive.DateTime `bson:"updated_at,omitempty" json:"updated_at"`
 }

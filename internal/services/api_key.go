@@ -56,19 +56,28 @@ func (a *APIKeyService) CreateAPIKey(data dto.CreateAPIKeyInputDTO, userID primi
 	dk := pbkdf2.Key([]byte(key), []byte(salt), 4096, 32, sha256.New)
 	encodedKey := base64.URLEncoding.EncodeToString(dk)
 
+	var permissions models.APIKeyPermissionsList
+	if len(data.Permissions) == 0 {
+		// set the default api key permissions list (full access)
+		permissions = models.APIKeyPermissions
+	} else {
+		permissions = data.Permissions
+	}
+
 	// construct new API Key
 	newAPIKey := &models.APIKey{
-		Name:      data.Name,
-		KeyType:   data.KeyType,
-		Role:      data.Role,
-		UserID:    userID,
-		MaskID:    maskID,
-		Hash:      encodedKey,
-		Salt:      salt,
-		Key:       key,
-		ExpiresAt: primitive.NewDateTimeFromTime(*data.ExpiresAt),
-		CreatedAt: primitive.NewDateTimeFromTime(time.Now()),
-		UpdatedAt: primitive.NewDateTimeFromTime(time.Now()),
+		Name:        data.Name,
+		KeyType:     data.KeyType,
+		Role:        data.Role,
+		UserID:      userID,
+		MaskID:      maskID,
+		Hash:        encodedKey,
+		Salt:        salt,
+		Key:         key,
+		Permissions: permissions,
+		ExpiresAt:   primitive.NewDateTimeFromTime(*data.ExpiresAt),
+		CreatedAt:   primitive.NewDateTimeFromTime(time.Now()),
+		UpdatedAt:   primitive.NewDateTimeFromTime(time.Now()),
 	}
 
 	// save to database
@@ -79,11 +88,12 @@ func (a *APIKeyService) CreateAPIKey(data dto.CreateAPIKeyInputDTO, userID primi
 	}
 
 	return dto.CreateAPIKeyOutputDTO{
-		ID:        id,
-		Name:      data.Name,
-		Key:       key,
-		CreatedAt: newAPIKey.CreatedAt,
-		ExpiresAt: newAPIKey.ExpiresAt,
+		ID:          id,
+		Name:        data.Name,
+		Key:         key,
+		Permissions: permissions,
+		CreatedAt:   newAPIKey.CreatedAt,
+		ExpiresAt:   newAPIKey.ExpiresAt,
 	}, nil
 }
 
@@ -105,9 +115,10 @@ func (a *APIKeyService) FindUserAPIKeys(userID string) ([]models.APIKey, error) 
 
 func (a *APIKeyService) UpdateAPIKey(id string, data dto.UpdateAPIKeyInputDTO) error {
 	apiKey := &models.APIKey{
-		Name:    data.Name,
-		Role:    data.Role,
-		KeyType: data.KeyType,
+		Name:        data.Name,
+		Role:        data.Role,
+		KeyType:     data.KeyType,
+		Permissions: data.Permissions,
 	}
 	ID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {

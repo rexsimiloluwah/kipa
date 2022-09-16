@@ -18,9 +18,10 @@ type Credential struct {
 type CredentialType string
 
 type AuthResponse struct {
-	AuthMode   CredentialType `json:"-"` // mode of authentication i.e. jwt or api_key
-	Credential Credential     `json:"credential"`
-	User       *models.User   `json:"user"`
+	AuthMode    CredentialType               `json:"-"` // mode of authentication i.e. jwt or api_key
+	Credential  Credential                   `json:"credential"`
+	User        *models.User                 `json:"user"`
+	Permissions models.APIKeyPermissionsList `json:"permissions"`
 }
 
 const (

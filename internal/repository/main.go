@@ -42,6 +42,7 @@ type IBucketItemRepository interface {
 	FindBucketItems(bucketUID string) ([]models.BucketItem, error)
 	CreateBucketItem(bucketItem *models.BucketItem) (primitive.ObjectID, error)
 	UpdateBucketItem(bucketItem *models.BucketItem, key string) error
+	IncrementIntItem(bucketUID string, key string, amount int) error
 	FindBucketItemByID(id string) (*models.BucketItem, error)
 	FindBucketItemByKeyName(bucketUID string, key string) (*models.BucketItem, error)
 	DeleteBucketItemByKeyName(bucketUID string, key string) error

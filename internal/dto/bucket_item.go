@@ -3,13 +3,15 @@ package dto
 import "go.mongodb.org/mongo-driver/bson/primitive"
 
 type CreateBucketItemInputDTO struct {
-	Key  string      `json:"key" form:"key"`
-	Data interface{} `json:"data" form:"data"`
+	Key  string      `json:"key" form:"key" validate:"required,min=2,max=200" swaggertype:"string" example:"test-key"`
+	Data interface{} `json:"data" form:"data" swaggertype:"primitive,string" example:""`
+	TTL  int         `json:"ttl" form:"ttl" swaggertype:"integer" example:""`
 }
 
 type UpdateBucketItemInputDTO struct {
-	Key  string      `json:"key" form:"key"`
-	Data interface{} `json:"data" form:"data"`
+	Key  string      `json:"key" form:"key" validate:"required,min=2,max=200" swaggertype:"string" example:"test-key"`
+	Data interface{} `json:"data" form:"data" swaggertype:"primitive,string" example:""`
+	TTL  int         `json:"ttl" form:"ttl" swaggertype:"integer" example:""`
 }
 
 type CreateBucketItemOutputDTO struct {
@@ -17,6 +19,7 @@ type CreateBucketItemOutputDTO struct {
 	BucketUID string             `json:"bucket_uid"`
 	Key       string             `json:"key"`
 	Data      interface{}        `json:"data"`
+	TTL       int                `json:"ttl"`
 	CreatedAt primitive.DateTime `json:"created_at"`
 }
 

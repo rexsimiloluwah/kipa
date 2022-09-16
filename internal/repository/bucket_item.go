@@ -49,7 +49,7 @@ func NewBucketItemRepository(cfg *config.Config, dbClient *mongo.Client) IBucket
 func (r *BucketItemRepository) FindBucketItems(bucketUID string) ([]models.BucketItem, error) {
 	bucketItems := []models.BucketItem{}
 	filter := bson.D{primitive.E{Key: "bucket_uid", Value: bucketUID}}
-	opts := options.Find().SetProjection(bucketItemDetailsProjection)
+	opts := options.Find().SetProjection(bucketItemDetailsProjection).SetSort(bson.D{primitive.E{Key: "created_at", Value: -1}})
 	cursor, err := r.collection.Find(r.ctx, filter, opts)
 	if err != nil {
 		logrus.WithError(err).Errorf("cannot find many bucket items")
@@ -76,7 +76,10 @@ func (r *BucketItemRepository) CreateBucketItem(bucketItem *models.BucketItem) (
 // Update a bucket item data
 // Accepts the bucket item data, Returns an error on failure
 func (r *BucketItemRepository) UpdateBucketItem(bucketItem *models.BucketItem, key string) error {
-	filter := bson.D{primitive.E{Key: "bucket_uid", Value: bucketItem.BucketUID}, primitive.E{Key: "key", Value: key}}
+	filter := bson.D{
+		primitive.E{Key: "bucket_uid", Value: bucketItem.BucketUID},
+		primitive.E{Key: "key", Value: key},
+	}
 	bucketItemByte, err := bson.Marshal(bucketItem)
 	if err != nil {
 		return errors.New("error marshalling bucket item data")
@@ -87,10 +90,37 @@ func (r *BucketItemRepository) UpdateBucketItem(bucketItem *models.BucketItem, k
 	}
 
 	opts := options.Update().SetUpsert(true)
-	_, err = r.collection.UpdateOne(r.ctx, filter, bson.D{primitive.E{Key: "$set", Value: update}}, opts)
+	_, err = r.collection.UpdateOne(
+		r.ctx,
+		filter,
+		bson.D{primitive.E{Key: "$set", Value: update}},
+		opts,
+	)
 	if err != nil {
 		logrus.WithError(err).Error("error updating bucket item")
 		return err
+	}
+	return nil
+}
+
+// Increment a bucket item integer value
+// Accepts the bucket UID 'bucketUID', item key 'key', and increment amount 'amount'
+// Returns an error
+func (r *BucketItemRepository) IncrementIntItem(bucketUID string, key string, amount int) error {
+	filter := bson.D{
+		primitive.E{Key: "bucket_uid", Value: bucketUID},
+		primitive.E{Key: "key", Value: key},
+	}
+	opts := options.Update().SetUpsert(true)
+	_, err := r.collection.UpdateOne(
+		r.ctx,
+		filter,
+		bson.D{primitive.E{Key: "$inc", Value: bson.D{primitive.E{Key: "data", Value: amount}}}},
+		opts,
+	)
+	if err != nil {
+		logrus.WithError(err).Error("error incrementing bucket item")
+		return errors.New("cannot increment non-numeric data")
 	}
 	return nil
 }

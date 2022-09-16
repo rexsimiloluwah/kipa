@@ -1,0 +1,162 @@
+<template>
+  <form
+    class="flex flex-col space-y-3 z-[1000]"
+    @submit.prevent="handleCreateBucket"
+  >
+    <div>
+      <div class="relative space-y-1">
+        <label for="name">Bucket Name<span class="text-red-600">*</span></label>
+        <input
+          type="text"
+          name="name"
+          id="name"
+          v-on:blur="handleBlur('name')"
+          v-model="formState.name"
+          placeholder="Enter Name i.e. 'test-pipeline-bucket'"
+          :class="`p-3 rounded-md border-primarygreen
+          border-2 w-full ${v$.name.$errors.length && 'input--error'}`"
+        />
+      </div>
+      <div
+        class="input-errors"
+        v-for="error of v$.name.$errors"
+        :key="error.$uid"
+      >
+        <p class="text-red-600">
+          {{ parseErrorMessage(String(error.$message), "Bucket Name") }}
+        </p>
+      </div>
+    </div>
+
+    <div>
+      <div class="relative space-y-1">
+        <label for="description">Bucket Description</label>
+        <input
+          type="text"
+          name="description"
+          id="description"
+          v-model="formState.description"
+          v-on:blur="handleBlur('description')"
+          placeholder="Enter Description"
+          :class="`p-3 rounded-md border-primarygreen
+          border-2 w-full ${v$.description.$errors.length && 'input--error'}`"
+        />
+      </div>
+      <div
+        class="input-errors"
+        v-for="error of v$.description.$errors"
+        :key="error.$uid"
+      >
+        <p class="text-red-600">
+          {{ parseErrorMessage(String(error.$message), "Description") }}
+        </p>
+      </div>
+    </div>
+
+    <div class="space-y-1">
+      <h1>
+        Select Bucket Permissions ({{
+          selectedBucketPermissions.filter((p) => p).length
+        }})
+      </h1>
+      <div class="flex flex-wrap gap-1">
+        <button
+          type="button"
+          v-for="permission in bucketPermissions.map((p, i) => ({
+            name: p,
+            id: i,
+          }))"
+          :key="permission.id"
+          :class="`${
+            selectedBucketPermissions[permission.id]
+              ? 'bg-primarygreen'
+              : 'border-2 border-primarygreen'
+          } p-2 rounded-lg`"
+          @click="
+            selectedBucketPermissions[permission.id] =
+              !selectedBucketPermissions[permission.id]
+          "
+        >
+          {{ permission.name }}
+          <span
+            v-if="selectedBucketPermissions[permission.id]"
+            class="text-md font-semibold"
+            >x</span
+          >
+        </button>
+      </div>
+    </div>
+
+    <custom-button
+      title="Create Bucket"
+      type="submit"
+      :disabled="v$.$invalid"
+      :loading="isLoading"
+    />
+  </form>
+</template>
+
+<script lang="ts">
+import { defineComponent, ref, reactive } from "vue";
+import useVuelidate from "@vuelidate/core";
+import { required, maxLength } from "@vuelidate/validators";
+import { parseErrorMessage } from "../../../common/utils/form";
+import { BUCKET_PERMISSIONS } from "../../../common/constants";
+import { useBucketStore } from "../../../store/bucket";
+
+export default defineComponent({
+  emits: ["closeModal"],
+  setup(props, { emit }) {
+    const bucketStore = useBucketStore();
+    const isLoading = ref<boolean>(false);
+    const bucketPermissions = reactive<Array<string>>(BUCKET_PERMISSIONS);
+    const selectedBucketPermissions = ref<Array<boolean>>(
+      [...Array(bucketPermissions.length)].map(() => true)
+    );
+    const formState = reactive({
+      name: "",
+      description: "",
+    });
+    const rules = {
+      name: { required },
+      description: {
+        maxLength: maxLength(200),
+      },
+    };
+
+    const v$ = useVuelidate(rules, formState);
+
+    const handleBlur = (key: "name" | "description") => {
+      // @ts-ignore
+      v$.value[key].$dirty = true;
+    };
+
+    const handleCreateBucket = async () => {
+      console.log("creating bucket");
+      const bucketData = {
+        ...formState,
+        permissions: bucketPermissions.filter(
+          (_, id) => selectedBucketPermissions.value[id]
+        ),
+      };
+      isLoading.value = true;
+      await bucketStore.createBucket(bucketData).then(() => {
+        isLoading.value = false;
+        emit("closeModal");
+      });
+    };
+
+    return {
+      bucketStore,
+      formState,
+      v$,
+      isLoading,
+      handleBlur,
+      handleCreateBucket,
+      parseErrorMessage,
+      bucketPermissions,
+      selectedBucketPermissions,
+    };
+  },
+});
+</script>

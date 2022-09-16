@@ -1,12 +1,12 @@
 package config
 
 import (
-	"log"
 	"os"
 	"strconv"
 	"strings"
 
 	"github.com/joho/godotenv"
+	"github.com/sirupsen/logrus"
 )
 
 // init is invoked on load
@@ -30,13 +30,14 @@ type Config struct {
 	DbPort                   string
 	DbUser                   string
 	DbPassword               string
-	MongoDbConnUri           string
+	MongoDbProdConnUri       string
+	MongoDbTestConnUri       string
 }
 
 // New() creates a new Config struct with the loaded environment variables
 func New() *Config {
 	if err := godotenv.Load(); err != nil {
-		log.Fatalf("Could not load environment variables.")
+		logrus.Fatalf("Could not load environment variables.")
 	}
 	return &Config{
 		Port:                     getEnv("PORT", "1323"),
@@ -49,7 +50,24 @@ func New() *Config {
 		DbUser:                   getEnv("MONGODB_USER", ""),
 		DbPassword:               getEnv("MONGODB_PASSWORD", ""),
 		DbName:                   getEnv("MONGODB_NAME", "keeper"),
-		MongoDbConnUri:           getEnv("MONGODB_CONN_URI", ""),
+		MongoDbProdConnUri:       getEnv("MONGODB_CONN_URI", ""),
+		MongoDbTestConnUri:       getEnv("MONGODB_TEST_CONN_URI", ""),
+	}
+}
+
+// NewTest() creates test environment variables
+func NewTest() *Config {
+	// if err := godotenv.Load(); err != nil {
+	// 	log.Fatalf("Could not load environment variables.")
+	// }
+	return &Config{
+		Port:                     getEnv("PORT", "1323"),
+		Env:                      getEnv("ENV", "test"),
+		JwtSecretKey:             getEnv("JWT_SECRET_KEY", ""),
+		AccessTokenJwtExpiresIn:  getEnv("ACCESS_TOKEN_JWT_EXPIRES_IN", "15m"),
+		RefreshTokenJwtExpiresIn: getEnv("REFRESH_TOKEN_JWT_EXPIRES_IN", "7d"),
+		DbName:                   getEnv("MONGODB_NAME", "keeper-go-test"),
+		MongoDbTestConnUri:       getEnv("MONGODB_TEST_CONN_URI", ""),
 	}
 }
 
@@ -68,10 +86,11 @@ func getEnv(key string, defaultValue string) string {
 func getEnvAsInt(key string, defaultValue int) int {
 	valueStr := getEnv(key, "")
 	// convert the string value to an integer
-	if value, err := strconv.Atoi(valueStr); err != nil && valueStr != "" {
-		return value
+	value, err := strconv.Atoi(valueStr)
+	if err != nil {
+		return defaultValue
 	}
-	return defaultValue
+	return value
 }
 
 // getEnvAsBool() reads the value for an environment variable 'key' as a boolean
@@ -79,10 +98,11 @@ func getEnvAsInt(key string, defaultValue int) int {
 func getEnvAsBool(key string, defaultValue bool) bool {
 	valueStr := getEnv(key, "")
 	// convert string value to a boolean
-	if value, err := strconv.ParseBool(valueStr); err != nil && valueStr != "" {
-		return value
+	value, err := strconv.ParseBool(valueStr)
+	if err != nil {
+		return defaultValue
 	}
-	return defaultValue
+	return value
 }
 
 // getEnvAsFloat reads the value for an environment variable 'key' as a float
@@ -90,10 +110,11 @@ func getEnvAsBool(key string, defaultValue bool) bool {
 func getEnvAsFloat(key string, defaultValue float64) float64 {
 	valueStr := getEnv(key, "")
 	// convert string value to float32
-	if value, err := strconv.ParseFloat(valueStr, 64); err != nil && valueStr != "" {
-		return value
+	value, err := strconv.ParseFloat(valueStr, 64)
+	if err != nil {
+		return defaultValue
 	}
-	return defaultValue
+	return value
 }
 
 // getEnvAsSlice reads the value for an environment variable 'key' as a slice

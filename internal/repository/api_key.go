@@ -35,6 +35,7 @@ var apiKeyDetailsProjection = bson.D{
 	primitive.E{Key: "salt", Value: 1},
 	primitive.E{Key: "hash", Value: 1},
 	primitive.E{Key: "revoked", Value: 1},
+	primitive.E{Key: "permissions", Value: 1},
 	primitive.E{Key: "expires_at", Value: 1},
 	primitive.E{Key: "created_at", Value: 1},
 	primitive.E{Key: "updated_at", Value: 1},
@@ -82,15 +83,15 @@ func (r *APIKeyRepository) FindAPIKeyByID(id string) (*models.APIKey, error) {
 	apiKey := &models.APIKey{}
 	ID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return nil, models.ErrInvalidObjectID
+		return &models.APIKey{}, models.ErrInvalidObjectID
 	}
 	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
 	opts := options.FindOne().SetProjection(apiKeyDetailsProjection)
 	if err := r.collection.FindOne(r.ctx, filter, opts).Decode(apiKey); err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			return nil, models.ErrAPIKeyNotFound
+			return &models.APIKey{}, models.ErrAPIKeyNotFound
 		}
-		return nil, err
+		return &models.APIKey{}, err
 	}
 	logrus.Info("found API Key: ", apiKey)
 	return apiKey, nil
@@ -117,13 +118,15 @@ func (r *APIKeyRepository) FindUserAPIKeys(userID string) ([]models.APIKey, erro
 		return nil, models.ErrInvalidObjectID
 	}
 	filter := bson.D{primitive.E{Key: "user_id", Value: ID}}
-	opts := options.Find().SetProjection(apiKeyDetailsProjection)
+	opts := options.Find().SetProjection(apiKeyDetailsProjection).SetSort(bson.D{primitive.E{Key: "created_at", Value: -1}})
 	cursor, err := r.collection.Find(r.ctx, filter, opts)
+
 	if err != nil {
 		logrus.WithError(err).Errorf("cannot find many apikeys")
 		return nil, models.ErrAPIKeysNotFound
 	}
 	if err = cursor.All(r.ctx, &apiKeys); err != nil {
+		logrus.WithError(err).Errorf("cannot find many apikeys")
 		return nil, models.ErrAPIKeysNotFound
 	}
 	logrus.Debug("user api keys: ", apiKeys)
@@ -155,11 +158,15 @@ func (r *APIKeyRepository) UpdateAPIKey(apiKey *models.APIKey) error {
 // Accepts the API Key ID and sets the 'revoked' field to true
 // Returns an error on failure
 func (r *APIKeyRepository) RevokeAPIKey(apiKeyID string) error {
-	filter := bson.D{primitive.E{Key: "_id", Value: apiKeyID}}
+	ID, err := primitive.ObjectIDFromHex(apiKeyID)
+	if err != nil {
+		return models.ErrInvalidObjectID
+	}
+	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
 	// create update query
 	update := bson.D{primitive.E{Key: "$set", Value: bson.D{primitive.E{Key: "revoked", Value: true}}}}
 	opts := options.Update().SetUpsert(true)
-	_, err := r.collection.UpdateOne(r.ctx, filter, update, opts)
+	_, err = r.collection.UpdateOne(r.ctx, filter, update, opts)
 	if err != nil {
 		logrus.WithError(err).Error("error revoking api key")
 		return models.ErrRevokingAPIKey
@@ -195,12 +202,9 @@ func (r *APIKeyRepository) DeleteAPIKey(apiKeyID string) error {
 		return err
 	}
 	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
-	result, err := r.collection.DeleteOne(r.ctx, filter)
+	_, err = r.collection.DeleteOne(r.ctx, filter)
 	if err != nil {
 		logrus.WithError(err).Error("error deleting api key")
-		return models.ErrDeletingAPIKey
-	}
-	if result.DeletedCount == 0 {
 		return models.ErrDeletingAPIKey
 	}
 	return nil
@@ -217,12 +221,9 @@ func (r *APIKeyRepository) DeleteAPIKeys(apiKeyIDs []string) error {
 		return err
 	}
 	filter := bson.D{primitive.E{Key: "_id", Value: bson.D{primitive.E{Key: "$in", Value: objectIDs}}}}
-	result, err := r.collection.DeleteMany(r.ctx, filter, nil)
+	_, err = r.collection.DeleteMany(r.ctx, filter, nil)
 	if err != nil {
 		logrus.WithError(err).Error("error deleting api keys")
-		return models.ErrDeletingAPIKeys
-	}
-	if result.DeletedCount == 0 {
 		return models.ErrDeletingAPIKeys
 	}
 	return nil

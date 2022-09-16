@@ -1,6 +1,10 @@
 package handlers
 
-import "go.mongodb.org/mongo-driver/mongo"
+import (
+	"keeper/internal/config"
+
+	"go.mongodb.org/mongo-driver/mongo"
+)
 
 type Handler struct {
 	UserHandler       IUserHandler
@@ -10,13 +14,13 @@ type Handler struct {
 	BucketItemHandler IBucketItemHandler
 }
 
-func NewHandler(dbClient *mongo.Client) *Handler {
+func NewHandler(cfg *config.Config, dbClient *mongo.Client) *Handler {
 	h := &Handler{
-		UserHandler:       NewUserHandler(dbClient),
-		APIKeyHandler:     NewAPIKeyHandler(dbClient),
-		AuthHandler:       NewAuthHandler(dbClient),
-		BucketHandler:     NewBucketHandler(dbClient),
-		BucketItemHandler: NewBucketItemHandler(dbClient),
+		UserHandler:       NewUserHandler(cfg, dbClient),
+		APIKeyHandler:     NewAPIKeyHandler(cfg, dbClient),
+		AuthHandler:       NewAuthHandler(cfg, dbClient),
+		BucketHandler:     NewBucketHandler(cfg, dbClient),
+		BucketItemHandler: NewBucketItemHandler(cfg, dbClient),
 	}
 	return h
 }

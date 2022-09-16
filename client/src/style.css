@@ -1,81 +1,137 @@
-:root {
-  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 400;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
+@font-face {
+    font-family: "inter";
+    src: url("../public/fonts/Inter-latin.woff2");
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
+@layer components{
+    nav ul{
+        @apply hidden md:flex justify-between space-x-8 items-center;
+    }
 
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
+    nav ul li{
+        @apply hover:font-semibold hover:text-primarygreen cursor-pointer;
+    }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
+    .hero {
+        clip-path: polygon(0 0, 100% 0%, 100% 90%, 0% 100%);
+    }
+    
+    .offset-shadow {
+        box-shadow: -10px -6px #37CCAA;
+    }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
+    .offset-shadow:hover {
+        box-shadow: 10px 6px #37CCAA;
+    }
 
-.card {
-  padding: 2em;
-}
+    .about__card {
+        @apply p-8 border-2 border-gray-500 flex flex-col justify-center items-center space-y-4 rounded-md offset-shadow transition-all duration-300
+    }
 
-#app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-}
+    input{
+        @apply p-3 rounded-md border-primarygreen border-2 w-full
+    }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+    .fade-enter-active,
+    .fade-leave-active {
+        transition-duration: 1000;
+        transition: transform 0.3s cubic-bezier(1, 0.5, 0.8, 1),
+            color 0.5s cubic-bezier(1, 0.5, 0.8, 1);
+    }
+
+    .fade-enter-from,
+    .fade-leave-to {
+        opacity: 0;
+        color: red;
+    }
+
+    .drop-in-enter-active,
+    .drop-in-leave-active {
+        transition: all 1s ease;
+    }
+
+    .drop-in-enter,
+    .drop-in-leave {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+
+    a:hover {
+        @apply underline underline-offset-1;
+    }
+
+    .input--error {
+        @apply border-2 border-red-600
+    }
+
+    .dashboard_nav--active {
+        @apply bg-green-50 border-l-8 border-2 border-primarygreen
+    }
+
+    .simple__btn {
+        @apply border-[1px] border-gray-600 p-2 rounded-lg text-white opacity-90 hover:opacity-100
+    }
+
+    .items__table {
+        @apply w-full shadow-lg bg-white rounded-lg overflow-hidden border-collapse
+    }
+
+    .items__table thead tr {
+        @apply text-left bg-primarygreen
+    }
+
+    .items__table tbody tr {
+        @apply text-left
+    }
+
+    .items__table thead tr th,
+    tbody tr td {
+        @apply p-3 border-[1px] border-gray-300
+    }
+
+    .tabs {
+        @apply flex flex-row h-12 border-b-2 border-black items-center mt-6
+    }
+
+    .tabs div {
+        width: auto;
+        padding: 15px;
+        border-right: 1px solid #dddddd;
+        text-align: center;
+        text-transform: uppercase;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 3px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        position: relative;
+    }
+
+    .tabs div::before {
+        content: "";
+        position: absolute;
+        bottom: 0px;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        background: #1a6755;
+        transition: all 0.2s ease;
+        opacity: 0;
+    }
+
+    .tabs div:hover,
+    .tabs div.active::before,
+    .tabs div.active {
+        opacity: 100;
+        color: #1a6755;
+    }
+
+
+    .tabs div:hover::before {
+        opacity: 100;
+    }
 }

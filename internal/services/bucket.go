@@ -40,6 +40,9 @@ func NewBucketService(cfg *config.Config, bucketRepo repository.IBucketRepositor
 
 var (
 	ErrBucketNameIsEmpty = errors.New("bucket name cannot be empty")
+	ErrBucketUIDIsEmpty  = errors.New("bucket uid cannot be empty")
+	ErrBucketIDIsEmpty   = errors.New("bucket id cannot be empty")
+	ErrUserIDIsEmpty     = errors.New("user id cannot be empty")
 )
 
 // Service for creating a new bucket
@@ -47,10 +50,19 @@ func (b *BucketService) CreateBucket(data dto.CreateBucketInputDTO, userID primi
 	if utils.IsStringEmpty(data.Name) {
 		return &dto.CreateBucketOutputDTO{}, ErrBucketNameIsEmpty
 	}
+
+	var permissions models.BucketPermissionsList
+	if len(data.Permissions) == 0 {
+		// set the default list of bucket permissions
+		permissions = models.BucketPermissions
+	} else {
+		permissions = data.Permissions
+	}
+
 	newBucket := &models.Bucket{
 		Name:        data.Name,
 		Description: data.Description,
-		Permissions: data.Permissions,
+		Permissions: permissions,
 		UserID:      userID,
 	}
 	// Generate a new bucket UID
@@ -76,13 +88,16 @@ func (b *BucketService) CreateBucket(data dto.CreateBucketInputDTO, userID primi
 
 // Service for returning a bucket's details by ID
 func (b *BucketService) FindBucketByID(id string) (*dto.BucketDetailsOutput, error) {
+	if utils.IsStringEmpty(id) {
+		return &dto.BucketDetailsOutput{}, ErrBucketIDIsEmpty
+	}
 	bucket, err := b.BucketRepository.FindBucketByID(id)
 	if err != nil {
 		return &dto.BucketDetailsOutput{}, err
 	}
 	// find the bucket items
 	bucketItems, err := b.BucketItemRepository.FindBucketItems(bucket.UID)
-	if err != nil {
+	if err != nil && !errors.Is(err, models.ErrBucketItemNotFound) {
 		return &dto.BucketDetailsOutput{}, err
 	}
 	return &dto.BucketDetailsOutput{
@@ -100,13 +115,16 @@ func (b *BucketService) FindBucketByID(id string) (*dto.BucketDetailsOutput, err
 
 // Service for returning a bucket's details by UID
 func (b *BucketService) FindBucketByUID(uid string) (*dto.BucketDetailsOutput, error) {
+	if utils.IsStringEmpty(uid) {
+		return &dto.BucketDetailsOutput{}, ErrBucketUIDIsEmpty
+	}
 	bucket, err := b.BucketRepository.FindBucketByUID(uid)
 	if err != nil {
 		return &dto.BucketDetailsOutput{}, err
 	}
 	// find the bucket items
 	bucketItems, err := b.BucketItemRepository.FindBucketItems(bucket.UID)
-	if err != nil {
+	if err != nil && !errors.Is(err, models.ErrBucketItemsNotFound) {
 		return &dto.BucketDetailsOutput{}, err
 	}
 	return &dto.BucketDetailsOutput{
@@ -124,6 +142,9 @@ func (b *BucketService) FindBucketByUID(uid string) (*dto.BucketDetailsOutput, e
 
 // Service for listing all a user's buckets with bucket items
 func (b *BucketService) ListUserBuckets(userID string) ([]dto.BucketDetailsOutput, error) {
+	if utils.IsStringEmpty(userID) {
+		return []dto.BucketDetailsOutput{}, ErrUserIDIsEmpty
+	}
 	userBucketDetailsOutput := []dto.BucketDetailsOutput{}
 	// find all user's buckets
 	userBuckets, err := b.BucketRepository.FindBucketsByUserID(userID)
@@ -133,7 +154,7 @@ func (b *BucketService) ListUserBuckets(userID string) ([]dto.BucketDetailsOutpu
 	// construct the bucket detals response
 	for _, bucket := range userBuckets {
 		bucketItems, err := b.BucketItemRepository.FindBucketItems(bucket.UID)
-		if err != nil {
+		if err != nil && !errors.Is(err, models.ErrBucketItemsNotFound) {
 			logrus.WithError(err).Errorf("error fetching bucket items for bucket: %s", bucket.UID)
 			return []dto.BucketDetailsOutput{}, err
 		}
@@ -155,6 +176,9 @@ func (b *BucketService) ListUserBuckets(userID string) ([]dto.BucketDetailsOutpu
 }
 
 func (b *BucketService) UpdateBucket(uid string, data dto.UpdateBucketInputDTO) error {
+	if utils.IsStringEmpty(uid) {
+		return ErrBucketUIDIsEmpty
+	}
 	updatedBucket := &models.Bucket{
 		Name:        data.Name,
 		Description: data.Description,
@@ -170,6 +194,9 @@ func (b *BucketService) UpdateBucket(uid string, data dto.UpdateBucketInputDTO) 
 }
 
 func (b *BucketService) DeleteBucket(uid string) error {
+	if utils.IsStringEmpty(uid) {
+		return ErrBucketUIDIsEmpty
+	}
 	// delete all the bucket items
 	err := b.BucketItemRepository.DeleteBucketItems(uid)
 	if err != nil {

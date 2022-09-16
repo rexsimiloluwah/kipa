@@ -6,8 +6,11 @@ import (
 	"keeper/internal/handlers"
 	"net/http"
 
+	_ "keeper/internal/docs"
+
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	echoSwagger "github.com/swaggo/echo-swagger"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -18,6 +21,25 @@ type Server struct {
 	Middlewares *Middleware
 }
 
+// @title Kipa
+// @version 0.1.0
+// @description API Documentation for Kipa - your secure & serverless key/value store
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name   Similoluwa Okunowo
+// @contact.url    http://www.swagger.io/support
+// @contact.email  support@swagger.io
+
+// @license.name  Apache 2.0
+// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @securityDefinitions.apiKey BearerAuth
+// @in header
+// @name Authorization
+
+// @host localhost:5050
+// @BasePath /api/v1
+// @schemes http
 func NewServer(cfg *config.Config, dbClient *mongo.Client) *Server {
 	e := echo.New()
 	// middlewares
@@ -31,7 +53,10 @@ func NewServer(cfg *config.Config, dbClient *mongo.Client) *Server {
 		AllowMethods: []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPatch, http.MethodPost, http.MethodDelete},
 	}))
 
-	handler := handlers.NewHandler(dbClient)
+	// swagger
+	e.GET("/docs/*", echoSwagger.WrapHandler)
+
+	handler := handlers.NewHandler(cfg, dbClient)
 	middlewares := NewMiddleware(cfg, dbClient)
 
 	return &Server{
@@ -49,6 +74,7 @@ func (s *Server) RegisterRoutes() {
 	InitAPIKeyRoutes(s)
 	InitBucketRoutes(s)
 	InitBucketItemRoutes(s)
+	InitPublicRoutes(s)
 }
 
 // TODO: Add graceful shutdown

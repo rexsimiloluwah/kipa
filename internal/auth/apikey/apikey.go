@@ -93,9 +93,10 @@ func (a *APIKeyService) Authenticate(credential *auth.Credential) (*auth.AuthRes
 	}
 	// generate the auth response
 	authResponse := &auth.AuthResponse{
-		AuthMode:   auth.CredentialTypeAPIKey,
-		Credential: *credential,
-		User:       user,
+		AuthMode:    auth.CredentialTypeAPIKey,
+		Credential:  *credential,
+		User:        user,
+		Permissions: apiKey.Permissions,
 	}
 
 	return authResponse, nil

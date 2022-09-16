@@ -23,8 +23,10 @@ func NewConnection(cfg *config.Config) Connection {
 	var MONGO_CONN_URI string
 	if cfg.Env == "development" {
 		MONGO_CONN_URI = fmt.Sprintf("mongodb://%s:%s@%s:%s", cfg.DbUser, cfg.DbPassword, cfg.DbHost, cfg.DbPort)
+	} else if cfg.Env == "test" {
+		MONGO_CONN_URI = cfg.MongoDbTestConnUri
 	} else {
-		MONGO_CONN_URI = cfg.MongoDbConnUri
+		MONGO_CONN_URI = cfg.MongoDbProdConnUri
 	}
 
 	clientOpts := options.Client().ApplyURI(MONGO_CONN_URI)
@@ -54,6 +56,16 @@ func NewConnection(cfg *config.Config) Connection {
 	}
 }
 
+// Disconnect the database
 func (c *Connection) Disconnect() {
 	c.Client.Disconnect(c.Ctx)
+}
+
+// Clean the database
+func (c *Connection) CleanDB(dbName string) {
+	client := c.Client
+	err := client.Database(dbName).Drop(context.TODO())
+	if err != nil {
+		logrus.WithError(err).Fatal("failed to clean db")
+	}
 }
