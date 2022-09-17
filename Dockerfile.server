@@ -1,10 +1,10 @@
 FROM golang:1.16-alpine AS builder 
 RUN mkdir /app 
-COPY .. /app 
+COPY . /app 
 WORKDIR /app 
 # install dependencies
-# RUN go mod download 
-# RUN go mod vendor
+RUN go mod download 
+RUN go mod vendor
 # generate the executable 
 RUN go build -o bin/main cmd/server.go
 

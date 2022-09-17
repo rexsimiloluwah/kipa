@@ -1,8 +1,22 @@
 version: "3.3"
 
 services:
-  mongo:
-    image: mongo 
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    ports: 
+      - 5050:5050
+    environment: 
+      - ENV=development 
+      - MONGODB_HOST=database 
+      - MONGODB_USER=root 
+      - MONGODB_PASSWORD=secret
+    depends_on: 
+      - database
+
+  database:
+    image: mongo  
     ports:
       - 27017:27017 
     environment:
@@ -10,4 +24,16 @@ services:
       - MONGO_INITDB_ROOT_PASSWORD=secret 
       - MONGO_INITDB_DATABASE=keeper
     restart: always 
+
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+    ports:
+      - 8080:80 
+    environment: 
+      - VITE_BACKEND_URL=http://localhost:5050 
+    depends_on: 
+      - backend 
+      - database
 
