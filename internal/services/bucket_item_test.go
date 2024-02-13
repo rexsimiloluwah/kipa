@@ -15,7 +15,9 @@ import (
 
 // provide the bucket item service
 func provideBucketItemService(mockBucketItemRepo *mocks.MockIBucketItemRepository, mockBucketRepo *mocks.MockIBucketRepository) IBucketItemService {
-	cfg := &config.Config{}
+	cfg := &config.Config{
+		Env: "test",
+	}
 	return NewBucketItemService(cfg, mockBucketItemRepo, mockBucketRepo)
 }
 
@@ -66,7 +68,7 @@ func TestBucketItemService_CreateBucketItem(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "should_successfully_create_bucket_item",
+			name: "should_fail_create_bucket_item",
 			args: args{
 				data: dto.CreateBucketItemInputDTO{
 					Key: "test",
@@ -852,4 +854,8 @@ func TestBucketItemService_DeleteBucketItemsByKeyName(t *testing.T) {
 			require.Nil(t, err)
 		})
 	}
+}
+
+func TestBucketItemService_IncrementIntValue(t *testing.T) {
+	require.Nil(t, nil)
 }

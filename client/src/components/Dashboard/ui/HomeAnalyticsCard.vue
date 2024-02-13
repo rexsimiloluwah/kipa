@@ -1,32 +1,14 @@
 <template>
   <div
-    class="
-      bg-white
-      py-4
-      px-8
-      rounded-lg
-      space-y-3
-      offset-shadow
-      border-2 border-gray-500
-      relative
-      hover:translate-y-[-3px]
-    "
+    class="bg-white py-4 px-8 rounded-lg space-y-3 offset-shadow border-2 border-gray-500 relative hover:translate-y-[-3px]"
   >
     <div
-      class="
-        bg-green-50
-        w-16
-        h-16
-        flex
-        items-center
-        justify-center
-        rounded-full
-        absolute
-        top-2
-        right-4
-      "
+      class="bg-green-50 w-16 h-16 flex items-center justify-center rounded-full absolute top-2 right-4"
     >
-      <font-awesome-icon :icon="icon" class="text-4xl text-primarygreen" />
+      <font-awesome-icon
+        :icon="icon"
+        class="text-4xl text-primarygreen"
+      />
     </div>
     <h1 class="text-7xl font-serif font-extrabold text-primarygreen">
       {{ count }}

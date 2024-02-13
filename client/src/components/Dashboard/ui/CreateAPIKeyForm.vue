@@ -5,23 +5,21 @@
   >
     <div>
       <div class="relative space-y-1">
-        <label for="name"
-          >API Key Name<span class="text-red-600">*</span></label
-        >
+        <label for="name">API Key Name<span class="text-red-600">*</span></label>
         <input
+          id="name"
+          v-model="formState.name"
           type="text"
           name="name"
-          id="name"
-          v-on:blur="handleBlur('name')"
-          v-model="formState.name"
           placeholder="Enter Name i.e. 'test-api-key'"
           :class="`${v$.name.$errors.length && 'input--error'}`"
-        />
+          @blur="handleBlur('name')"
+        >
       </div>
       <div
-        class="input-errors"
         v-for="error of v$.name.$errors"
         :key="error.$uid"
+        class="input-errors"
       >
         <p class="text-red-600">
           {{ parseErrorMessage(String(error.$message), "API Key Name") }}
@@ -33,19 +31,19 @@
       <div class="relative space-y-1">
         <label for="description">Role</label>
         <input
-          type="text"
-          name="role"
           id="role"
           v-model="formState.role"
-          v-on:blur="handleBlur('role')"
+          type="text"
+          name="role"
           placeholder="Enter Role"
           :class="`${v$.role.$errors.length && 'input--error'}`"
-        />
+          @blur="handleBlur('role')"
+        >
       </div>
       <div
-        class="input-errors"
         v-for="error of v$.role.$errors"
         :key="error.$uid"
+        class="input-errors"
       >
         <p class="text-red-600">
           {{ parseErrorMessage(String(error.$message), "Role") }}
@@ -54,16 +52,14 @@
     </div>
 
     <div>
-      <label for="expires_at"
-        >Expires At<span class="text-red-600">*</span></label
-      >
+      <label for="expires_at">Expires At<span class="text-red-600">*</span></label>
       <input
-        type="datetime-local"
-        name="expires_at"
         id="expires_at"
         v-model="formState.expires_at"
-        v-on:blur="handleBlur('expires_at')"
-      />
+        type="datetime-local"
+        name="expires_at"
+        @blur="handleBlur('expires_at')"
+      >
     </div>
 
     <div class="space-y-1">
@@ -74,12 +70,12 @@
       </h1>
       <div class="flex flex-wrap gap-1">
         <button
-          type="button"
           v-for="permission in apiKeyPermissions.map((p, i) => ({
             name: p,
             id: i,
           }))"
           :key="permission.id"
+          type="button"
           :class="`${
             selectedAPIKeyPermissions[permission.id]
               ? 'bg-primarygreen'
@@ -94,8 +90,7 @@
           <span
             v-if="selectedAPIKeyPermissions[permission.id]"
             class="text-md font-semibold"
-            >x</span
-          >
+          >x</span>
         </button>
       </div>
     </div>
@@ -156,7 +151,7 @@ export default defineComponent({
         ),
       };
       isLoading.value = true;
-      await apiKeyStore.createAPIKey(data).then((response) => {
+      await apiKeyStore.createAPIKey(data).then(() => {
         isLoading.value = false;
         emit("closeModal");
       });

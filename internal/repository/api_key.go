@@ -73,7 +73,7 @@ func (r *APIKeyRepository) FindAPIKeyByKeyName(key string, value string) (*model
 		}
 		return nil, err
 	}
-	logrus.Info("found API Key: ", apiKey)
+	// logrus.Info("found API Key: ", apiKey)
 	return apiKey, nil
 }
 
@@ -93,7 +93,7 @@ func (r *APIKeyRepository) FindAPIKeyByID(id string) (*models.APIKey, error) {
 		}
 		return &models.APIKey{}, err
 	}
-	logrus.Info("found API Key: ", apiKey)
+	// logrus.Info("found API Key: ", apiKey)
 	return apiKey, nil
 }
 
@@ -129,7 +129,7 @@ func (r *APIKeyRepository) FindUserAPIKeys(userID string) ([]models.APIKey, erro
 		logrus.WithError(err).Errorf("cannot find many apikeys")
 		return nil, models.ErrAPIKeysNotFound
 	}
-	logrus.Debug("user api keys: ", apiKeys)
+	// logrus.Debug("user api keys: ", apiKeys)
 	return apiKeys, nil
 }
 

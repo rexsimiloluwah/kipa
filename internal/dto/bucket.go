@@ -13,8 +13,8 @@ type CreateBucketInputDTO struct {
 }
 
 type UpdateBucketInputDTO struct {
-	Name        string                       `json:"name" form:"name" swaggertype:"string" example:"test-bucket"`
-	Description string                       `json:"description" form:"description" swaggertype:"string" example:""`
+	Name        string                       `json:"name" form:"name" validate:"omitempty,min=2,max=150" swaggertype:"string" example:"test-bucket"`
+	Description string                       `json:"description" form:"description" validate:"omitempty,min=2,max=150" swaggertype:"string" example:""`
 	Permissions models.BucketPermissionsList `json:"permissions" form:"permissions" swaggertype:"array,string" example:""`
 }
 

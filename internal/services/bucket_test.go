@@ -15,7 +15,9 @@ import (
 
 // provide the bucket service
 func provideBucketService(mockBucketRepo *mocks.MockIBucketRepository, mockBucketItemRepo *mocks.MockIBucketItemRepository) IBucketService {
-	cfg := &config.Config{}
+	cfg := &config.Config{
+		Env: "test",
+	}
 	return NewBucketService(cfg, mockBucketRepo, mockBucketItemRepo)
 }
 

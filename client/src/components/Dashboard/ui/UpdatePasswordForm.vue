@@ -1,18 +1,23 @@
 <template>
   <div class="w-full py-4">
-    <h1 class="text-2xl font-bold mb-3">Update Password</h1>
-    <form class="space-y-3" @submit.prevent="handleUpdatePassword">
+    <h1 class="text-2xl font-bold mb-3">
+      Update Password
+    </h1>
+    <form
+      class="space-y-3"
+      @submit.prevent="handleUpdatePassword"
+    >
       <div>
         <div class="relative">
           <input
-            :type="showPassword ? 'text' : 'password'"
-            name="password"
             id="password"
             v-model="formState.password"
-            v-on:blur="handleBlur('password')"
+            :type="showPassword ? 'text' : 'password'"
+            name="password"
             placeholder="Enter Password"
             :class="`${v$.password.$errors.length && 'input--error'}`"
-          />
+            @blur="handleBlur('password')"
+          >
           <font-awesome-icon
             :icon="showPassword ? 'eye-slash' : 'eye'"
             class="absolute top-5 right-4 text-gray-700 cursor-pointer"
@@ -20,16 +25,16 @@
           />
         </div>
         <div
-          class="input-errors"
           v-for="error of v$.password.$errors"
           :key="error.$uid"
+          class="input-errors"
         >
           <p class="text-red-600">
             {{ parseErrorMessage(String(error.$message), "Password") }}
           </p>
         </div>
       </div>
-      <Button
+      <CustomButton
         title="Update Password"
         type="submit"
         :disabled="v$.$invalid"
@@ -45,13 +50,13 @@ import { defineComponent, ref, reactive } from "vue";
 import { required, minLength } from "@vuelidate/validators";
 import useVuelidate from "@vuelidate/core";
 import { parseErrorMessage } from "../../../common/utils/form";
-import Button from "../../shared/Button.vue";
+import { CustomButton } from "../../shared";
 import { useUserStore } from "../../../store/user";
 
 export default defineComponent({
   name: "UpdatePasswordForm",
   components: {
-    Button,
+    CustomButton,
   },
   setup() {
     const userStore = useUserStore();
@@ -82,7 +87,7 @@ export default defineComponent({
     };
 
     // show password control
-    const showPassword = ref<Boolean>(false);
+    const showPassword = ref<boolean>(false);
     const toggleShowPassword = () => {
       showPassword.value = !showPassword.value;
     };

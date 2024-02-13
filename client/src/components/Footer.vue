@@ -4,63 +4,57 @@
       <Container>
         <div>
           <div
-            class="
-              flex
-              justify-between
-              md:flex-row
-              space-y-4
-              md:space-y-0
-              flex-col
-            "
+            class="flex justify-between md:flex-row space-y-4 md:space-y-0 flex-col"
           >
             <div>
               <div class="nav__brand font-bold text-2xl text-white">
                 kipa
-                <span
-                  class="bg-green-500 w-2 h-2 rounded-full inline-block"
-                ></span>
+                <span class="bg-green-500 w-2 h-2 rounded-full inline-block" />
               </div>
               <p>A secure {{ "&" }} serverless key/value store.</p>
               <ul class="inline-flex space-x-5 items-center my-2">
                 <li
-                  class="
-                    cursor-pointer
-                    hover:text-white
-                    transition-all
-                    duration-300
-                  "
                   v-for="item in socialIcons"
                   :key="socialIcons.indexOf(item)"
+                  class="cursor-pointer hover:text-white transition-all duration-300"
                 >
                   <font-awesome-icon
                     :icon="['fab', item.icon]"
                     class="text-2xl"
-                  ></font-awesome-icon>
+                  />
                 </li>
               </ul>
             </div>
             <div class="grid grid-cols-2 gap-12">
               <div>
-                <h1 class="font-bold text-[18px]">Navigation</h1>
+                <h1 class="font-bold text-[18px]">
+                  Navigation
+                </h1>
                 <ul>
                   <li
-                    class="cursor-pointer hover:underline text-gray-700"
                     v-for="icon in footerNavigation"
                     :key="footerNavigation.indexOf(icon)"
+                    class="cursor-pointer hover:underline text-gray-700"
                   >
-                    <router-link :to="icon.url">{{ icon.title }}</router-link>
+                    <router-link :to="icon.url">
+                      {{ icon.title }}
+                    </router-link>
                   </li>
                 </ul>
               </div>
               <div>
-                <h1 class="font-bold text-[18px]">Support</h1>
+                <h1 class="font-bold text-[18px]">
+                  Support
+                </h1>
                 <ul>
                   <li
-                    class="cursor-pointer hover:underline text-gray-700"
                     v-for="icon in supportNavigation"
                     :key="supportNavigation.indexOf(icon)"
+                    class="cursor-pointer hover:underline text-gray-700"
                   >
-                    <router-link :to="icon.url">{{ icon.title }}</router-link>
+                    <router-link :to="icon.url">
+                      {{ icon.title }}
+                    </router-link>
                   </li>
                 </ul>
               </div>
@@ -88,7 +82,7 @@ import { Container } from "./shared";
 import { useCounterStore } from "../store/counter";
 
 export default defineComponent({
-  name: "Footer",
+  name: "FooterSection",
   components: { Container },
   setup() {
     const store = useCounterStore();

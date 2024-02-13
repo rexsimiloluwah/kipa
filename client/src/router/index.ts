@@ -3,6 +3,9 @@ import Home from "../views/Home.vue";
 import Login from "../views/Login.vue";
 import Signup from "../views/Signup.vue";
 import Dashboard from "../views/Dashboard.vue";
+import ForgotPassword from "../views/ForgotPassword.vue";
+import ResetPassword from "../views/ResetPassword.vue";
+import VerifyEmail from "../views/VerifyEmail.vue";
 import {
   Buckets,
   UserSettings,
@@ -17,19 +20,37 @@ const routes = [
     path: "/",
     name: "Home",
     component: Home,
+    meta: {
+      guest: true,
+    },
   },
   {
     path: "/login",
     name: "Login",
     component: Login,
-    meta: {
-      loginPath: false,
-    },
   },
   {
     path: "/signup",
     name: "Signup",
     component: Signup,
+    meta: {
+      guest: true,
+    },
+  },
+  {
+    path: "/verify-email",
+    name: "VerifyEmail",
+    component: VerifyEmail,
+  },
+  {
+    path: "/forgot-password",
+    name: "ForgotPassword",
+    component: ForgotPassword,
+  },
+  {
+    path: "/reset-password",
+    name: "ResetPassword",
+    component: ResetPassword,
   },
   {
     path: "/dashboard",
@@ -70,11 +91,12 @@ const router = createRouter({
 // Using Navigation guards to protect authenticated routes by redirecting to specific routes
 router.beforeEach((to, _, next) => {
   // Check whether a certain route requires authentication
-  const accessToken = TokenService.getLocalAccessToken();
+  const accessToken = TokenService.getRefreshTokenCookie();
   const requiresAuth = to.matched.some((record) => record.meta.requiresAuth);
-  const loginPath = to.matched.some((record) => record.meta.loginPath);
+  const isGuestRoute = to.matched.some((record) => record.meta.guest);
 
-  if (loginPath && accessToken) {
+  // If it is a guest route and an access token exists
+  if (isGuestRoute && accessToken) {
     next("/dashboard");
   }
   // Go to login page if un-authenticated

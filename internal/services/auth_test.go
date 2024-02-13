@@ -15,6 +15,7 @@ import (
 // provide the mock auth service
 func provideMockAuthService(mockUserRepo *mocks.MockIUserRepository) IAuthService {
 	cfg := &config.Config{
+		Env:                      "test",
 		JwtSecretKey:             "secret",
 		AccessTokenJwtExpiresIn:  "30m",
 		RefreshTokenJwtExpiresIn: "7d",
@@ -191,4 +192,12 @@ func TestAuthService_RefreshToken(t *testing.T) {
 			require.NotEmpty(t, out.AccessToken)
 		})
 	}
+}
+
+func TestAuthService_ForgotPassword(t *testing.T) {
+	require.Nil(t, nil)
+}
+
+func TestAuthService_ResetPassword(t *testing.T) {
+	require.Nil(t, nil)
 }

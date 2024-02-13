@@ -5,7 +5,7 @@ import TokenService from "./token";
 class BucketService {
   /**
    * Create a new Bucket
-   * @param data // accepts the bucket data
+   * @param data // Bucket payload
    * @returns
    */
   async createBucket(data: CreateBucketData) {
@@ -24,7 +24,7 @@ class BucketService {
 
   /**
    * Find a bucket by UID
-   * @param uid // accepts the bucket UID
+   * @param uid // Bucket UID
    * @returns
    */
   findBucket(uid: string): Promise<BucketDetails> {
@@ -47,7 +47,7 @@ class BucketService {
    */
   getUserBuckets(): Promise<Array<BucketDetails>> {
     return new Promise((resolve, reject) => {
-      const token = TokenService.getLocalAccessToken();
+      const token = TokenService.getAccessTokenCookie();
       const authHeader = { Authorization: `Bearer ${token}` };
       axios
         .get("/buckets", { headers: authHeader })
@@ -63,8 +63,8 @@ class BucketService {
 
   /**
    * Update a user's bucket data
-   * @param uid // accepts the UID of the bucket
-   * @param data // accepts the data for updating the bucket
+   * @param uid // Bucket UID
+   * @param data // Updated bucket payload
    * @returns
    */
   updateBucket(uid: string, data: CreateBucketData) {
@@ -83,7 +83,7 @@ class BucketService {
 
   /**
    * Delete a user's bucket
-   * @param uid // accepts the bucket UID
+   * @param uid // Bucket UID
    * @returns
    */
   deleteBucket(uid: string) {

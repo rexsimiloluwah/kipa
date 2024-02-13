@@ -16,7 +16,7 @@ type User struct {
 	Password             string             `bson:"password,omitempty" json:"-"`
 	Role                 string             `bson:"role,omitempty" json:"role"`
 	RegistrationProvider string             `bson:"registration_provider,omitempty" json:"registration_provider"`
-	HashedRefreshToken   string             `bson:"hashed_refresh_token,omitempty" json:"hashed_refresh_token"`
+	HashedRefreshToken   string             `bson:"hashed_refresh_token,omitempty" json:"-"`
 	EmailVerified        bool               `bson:"email_verified,omitempty" json:"email_verified"`
 	CreatedAt            primitive.DateTime `bson:"created_at,omitempty" json:"created_at"`
 	UpdatedAt            primitive.DateTime `bson:"updated_at,omitempty" json:"updated_at"`

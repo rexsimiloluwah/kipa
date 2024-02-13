@@ -7,6 +7,7 @@ import (
 	"keeper/internal/config"
 	"keeper/internal/models"
 	"keeper/internal/utils"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
@@ -22,6 +23,8 @@ var bucketItemDetailsProjection = bson.D{
 	primitive.E{Key: "user_id", Value: 1},
 	primitive.E{Key: "key", Value: 1},
 	primitive.E{Key: "data", Value: 1},
+	primitive.E{Key: "ttl", Value: 1},
+	primitive.E{Key: "type", Value: 1},
 	primitive.E{Key: "created_at", Value: 1},
 	primitive.E{Key: "updated_at", Value: 1},
 }
@@ -43,6 +46,16 @@ func NewBucketItemRepository(cfg *config.Config, dbClient *mongo.Client) IBucket
 	}
 }
 
+// Finds bucket items (using pagination and filtering)
+func (r *BucketItemRepository) FindBucketItemsPaged(filter bson.M, opts *options.FindOptions, paginationParams utils.PaginationParams) ([]models.BucketItem, utils.PageInfo, error) {
+	bucketItems := []models.BucketItem{}
+	results, pageInfo, err := utils.FindManyWithPagination(r.collection, bucketItemDetailsProjection, bucketItems, r.ctx, filter, opts, paginationParams)
+	if err != nil {
+		return nil, utils.PageInfo{}, err
+	}
+	return results.([]models.BucketItem), pageInfo, nil
+}
+
 // Finds bucket items for a specific bucket UID
 // Accepts the bucket UID
 // Returns the list of bucket items and an error
@@ -52,13 +65,13 @@ func (r *BucketItemRepository) FindBucketItems(bucketUID string) ([]models.Bucke
 	opts := options.Find().SetProjection(bucketItemDetailsProjection).SetSort(bson.D{primitive.E{Key: "created_at", Value: -1}})
 	cursor, err := r.collection.Find(r.ctx, filter, opts)
 	if err != nil {
-		logrus.WithError(err).Errorf("cannot find many bucket items")
+		logrus.WithError(err).Errorf("failed to find many bucket items")
 		return nil, models.ErrBucketItemsNotFound
 	}
 	if err = cursor.All(r.ctx, &bucketItems); err != nil {
 		return nil, models.ErrBucketItemsNotFound
 	}
-	logrus.Debug("found bucket items: ", bucketItems)
+	// logrus.Debug("found bucket items: ", bucketItems)
 	return bucketItems, nil
 }
 
@@ -141,6 +154,12 @@ func (r *BucketItemRepository) FindBucketItemByID(id string) (*models.BucketItem
 			return nil, models.ErrBucketItemNotFound
 		}
 		return nil, err
+	}
+	// Check if the bucket item is expired
+	// the bucket item has expired if the current time is greater than the\
+	// sum of the time the item was created and the specified TTL duration of the item
+	if bucketItem.TTL != 0 && time.Now().After(bucketItem.CreatedAt.Time().Add(time.Duration(bucketItem.TTL))) {
+		return nil, models.ErrBucketItemExpired
 	}
 	logrus.Info("found bucket item: ", bucketItem)
 	return bucketItem, nil

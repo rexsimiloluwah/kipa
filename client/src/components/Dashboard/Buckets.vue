@@ -1,9 +1,9 @@
 <template>
   <section>
     <Modal
-      @close="showCreateBucketModal = !showCreateBucketModal"
       v-if="showCreateBucketModal"
       title="Create Bucket"
+      @close="showCreateBucketModal = !showCreateBucketModal"
     >
       <CreateBucketForm
         @close-modal="showCreateBucketModal = !showCreateBucketModal"
@@ -11,12 +11,15 @@
     </Modal>
     <div class="mb-8 space-y-4">
       <h1 class="md:text-4xl text-2xl font-serif font-extrabold text-gray-800">
-        <span aria-label="robot" role="img">🤖</span> Howdy,
         <span
-          >{{ userStore.user?.firstname }} {{ userStore.user?.lastname }}</span
-        >
+          aria-label="robot"
+          role="img"
+        >🤖</span> Howdy,
+        <span>{{ userStore.user?.firstname }} {{ userStore.user?.lastname }}</span>
       </h1>
-      <p class="text-md">Welcome to your Kipa Dasboard</p>
+      <p class="text-md">
+        Welcome to your Kipa Dasboard
+      </p>
     </div>
 
     <div class="grid grid-cols-2 gap-8">
@@ -38,15 +41,7 @@
           Your Buckets
         </h1>
         <button
-          class="
-            border-[1px] border-gray-600
-            p-2
-            rounded-lg
-            bg-primarygreen
-            text-white
-            opacity-80
-            hover:opacity-100
-          "
+          class="border-[1px] border-gray-600 p-2 rounded-lg bg-primarygreen text-white opacity-80 hover:opacity-100"
           @click="showCreateBucketModal = true"
         >
           Create Bucket <font-awesome-icon icon="add" />
@@ -55,7 +50,9 @@
       <Divider />
 
       <div class="buckets-list__container flex flex-col space-y-3 my-4">
-        <div v-if="bucketStore.isLoadingBuckets">Loading Buckets...</div>
+        <div v-if="bucketStore.isLoadingBuckets">
+          Loading Buckets...
+        </div>
         <BucketCard
           v-for="bucket in bucketStore.buckets"
           :key="bucket.uid"
@@ -87,6 +84,8 @@ export default defineComponent({
     const userStore = useUserStore();
     const bucketStore = useBucketStore();
     const showCreateBucketModal = ref<boolean>(false);
+
+    console.log("buckets: ", bucketStore.buckets);
 
     return {
       userStore,

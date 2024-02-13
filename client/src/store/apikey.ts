@@ -2,7 +2,6 @@ import { defineStore } from "pinia";
 import { APIKey, CreateAPIKeyData } from "../common/types/apikey";
 import APIKeyService from "../services/apikey";
 import { useToast } from "vue-toastification";
-import router from "../router";
 
 const toast = useToast();
 
@@ -11,6 +10,7 @@ export const useAPIKeyStore = defineStore("apikey", {
     apikeys: [] as Array<APIKey>,
     isLoadingAPIKeys: false as boolean,
     activeKeyID: "" as string, // for storing the state of a newly created API key ID
+    activeKey: "" as string, // for storing the state of the newly created API key
   }),
   getters: {
     apikey: (state) => {
@@ -22,6 +22,7 @@ export const useAPIKeyStore = defineStore("apikey", {
       try {
         this.isLoadingAPIKeys = true;
         const apiKeys = await APIKeyService.getUserAPIKeys();
+        console.log(apiKeys);
         this.apikeys = apiKeys;
         this.isLoadingAPIKeys = false;
       } catch (error: any) {
@@ -35,7 +36,8 @@ export const useAPIKeyStore = defineStore("apikey", {
         const newAPIKey = await APIKeyService.createAPIKey(data);
         toast.success("Successfully created API key.");
         this.fetchUserAPIKeys();
-        this.activeKeyID = (newAPIKey as APIKey).id;
+        this.activeKeyID = newAPIKey.id;
+        this.activeKey = newAPIKey.key;
       } catch (error: any) {
         toast.error(error.error || error.message);
       }

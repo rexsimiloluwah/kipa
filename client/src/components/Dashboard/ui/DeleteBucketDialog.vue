@@ -1,21 +1,19 @@
 <template>
   <div>
     <h1 class="text-lg font-semibold">
-      Are you sure you want to delete bucket "{{ bucket.name }}"
+      Are you sure you want to delete bucket "{{ bucket.name }}"? This action deletes all the bucket items under this bucket. 
     </h1>
     <div class="flex flex-col space-y-3">
-      <label for="bucketName"
-        >Type:
+      <label for="bucketName">Type:
         <span class="font-semibold text-primarygreen">{{ bucket.name }}</span>
-        to delete</label
-      >
+        to delete</label>
       <input
+        id="bucketName"
+        v-model="bucketName"
         type="text"
         name="bucketName"
-        id="bucketName"
         placeholder="Enter the bucket name"
-        v-model="bucketName"
-      />
+      >
       <button
         :class="`simple__btn bg-red-700 ${
           bucketName.trim() !== bucket.name &&
@@ -24,7 +22,10 @@
         @click="handleDeleteBucket"
       >
         <span>Delete Bucket</span>{{ " " }}
-        <font-awesome-icon icon="trash-can" v-if="!isLoading" />
+        <font-awesome-icon
+          v-if="!isLoading"
+          icon="trash-can"
+        />
         <font-awesome-icon
           v-if="isLoading"
           icon="spinner"
@@ -38,21 +39,18 @@
 <script lang="ts">
 import { defineComponent, PropType, ref } from "vue";
 import { BucketDetails } from "../../../common/types/bucket";
-import Button from "../../shared/Button.vue";
 import { useBucketStore } from "../../../store/bucket";
 
 export default defineComponent({
   name: "DeleteBucketDialog",
-  emits: ["closeModal"],
+  components: {},
   props: {
     bucket: {
       type: Object as PropType<BucketDetails>,
       required: true,
     },
   },
-  components: {
-    Button,
-  },
+  emits: ["closeModal"],
   setup(props, { emit }) {
     const bucketStore = useBucketStore();
     const bucketName = ref<string>("");

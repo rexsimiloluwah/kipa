@@ -5,7 +5,7 @@ import "go.mongodb.org/mongo-driver/bson/primitive"
 type CreateBucketItemInputDTO struct {
 	Key  string      `json:"key" form:"key" validate:"required,min=2,max=200" swaggertype:"string" example:"test-key"`
 	Data interface{} `json:"data" form:"data" swaggertype:"primitive,string" example:""`
-	TTL  int         `json:"ttl" form:"ttl" swaggertype:"integer" example:""`
+	TTL  int         `json:"ttl" form:"ttl" validate:"min=0" swaggertype:"integer"`
 }
 
 type UpdateBucketItemInputDTO struct {
@@ -20,6 +20,7 @@ type CreateBucketItemOutputDTO struct {
 	Key       string             `json:"key"`
 	Data      interface{}        `json:"data"`
 	TTL       int                `json:"ttl"`
+	Type      string             `json:"type"`
 	CreatedAt primitive.DateTime `json:"created_at"`
 }
 

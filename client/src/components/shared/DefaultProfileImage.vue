@@ -1,19 +1,6 @@
 <template>
   <div
-    class="
-      bg-cyan-600
-      flex
-      justify-center
-      items-center
-      font-semibold
-      text-white
-      rounded-full
-      w-12
-      h-12
-      cursor-pointer
-      opacity-90
-      hover:opacity-100
-    "
+    class="bg-cyan-600 flex justify-center items-center font-semibold text-white rounded-full w-12 h-12 cursor-pointer opacity-90 hover:opacity-100"
   >
     {{ label }}
   </div>

@@ -20,14 +20,14 @@ type IAPIKeyService interface {
 }
 
 type APIKeyService struct {
-	apiKeyRepository repository.IAPIKeyRepository
-	userRepository   repository.IUserRepository
+	apiKeyRepo repository.IAPIKeyRepository
+	userRepo   repository.IUserRepository
 }
 
-func NewAPIKeyService(apiKeyRepository repository.IAPIKeyRepository, userRepository repository.IUserRepository) IAPIKeyService {
+func NewAPIKeyService(apiKeyRepo repository.IAPIKeyRepository, userRepo repository.IUserRepository) IAPIKeyService {
 	return &APIKeyService{
-		apiKeyRepository: apiKeyRepository,
-		userRepository:   userRepository,
+		apiKeyRepo: apiKeyRepo,
+		userRepo:   userRepo,
 	}
 }
 
@@ -58,7 +58,7 @@ func (a *APIKeyService) Authenticate(credential *auth.Credential) (*auth.AuthRes
 	// obtain the mask ID
 	maskID := keySplit[1]
 	// find the API Key
-	apiKey, err := a.apiKeyRepository.FindAPIKeyByMaskID(maskID)
+	apiKey, err := a.apiKeyRepo.FindAPIKeyByMaskID(maskID)
 	if err != nil {
 		return nil, ErrAPIKeyDoesNotExist
 	}
@@ -87,7 +87,7 @@ func (a *APIKeyService) Authenticate(credential *auth.Credential) (*auth.AuthRes
 	}
 
 	// get the user payload
-	user, err := a.userRepository.FindUserById(apiKey.UserID.Hex())
+	user, err := a.userRepo.FindUserById(apiKey.UserID.Hex())
 	if err != nil {
 		return nil, models.ErrUserNotFound
 	}

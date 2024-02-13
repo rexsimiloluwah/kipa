@@ -1,9 +1,9 @@
 <template>
   <section>
     <Modal
-      @close="showCreateAPIKeyModal = !showCreateAPIKeyModal"
       v-if="showCreateAPIKeyModal"
       title="Create API Key"
+      @close="showCreateAPIKeyModal = !showCreateAPIKeyModal"
     >
       <CreateAPIKeyForm
         @close-modal="showCreateAPIKeyModal = !showCreateAPIKeyModal"
@@ -14,15 +14,7 @@
         Your API Keys
       </h1>
       <button
-        class="
-          border-[1px] border-gray-600
-          p-2
-          rounded-lg
-          bg-primarygreen
-          text-white
-          opacity-80
-          hover:opacity-100
-        "
+        class="border-[1px] border-gray-600 p-2 rounded-lg bg-primarygreen text-white opacity-80 hover:opacity-100"
         @click="showCreateAPIKeyModal = true"
       >
         Create New API Key <font-awesome-icon icon="add" />
@@ -30,11 +22,14 @@
     </div>
     <Divider />
     <div class="my-8">
-      <div v-if="apiKeyStore.apikeys" class="space-y-4">
+      <div
+        v-if="apiKeyStore.apikeys"
+        class="space-y-4"
+      >
         <APIKeyCard
-          name="test-key"
           v-for="apikey in apiKeyStore.apikeys"
           :key="apikey.id"
+          name="test-key"
           :apikey="apikey"
         />
       </div>

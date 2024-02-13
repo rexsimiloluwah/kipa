@@ -1,13 +1,6 @@
 <template>
   <div
-    class="
-      min-w-[250px]
-      rounded-lg
-      border-[1px] border-gray-500
-      bg-white
-      shadow-lg
-      overflow-hidden
-    "
+    class="min-w-[250px] rounded-lg border-[1px] border-gray-500 bg-white shadow-lg overflow-hidden"
   >
     <div class="nav__brand font-bold text-2xl p-3 bg-gray-50">
       <Logo />
@@ -27,14 +20,20 @@
       >
         {{ link.title }}
       </li>
+      <li
+        :class="`
+              text-xl
+              p-4
+              cursor-pointer
+              hover:bg-green-50
+            `"
+        @click="userStore.logoutUser()"
+      >
+        Logout
+      </li>
     </ul>
     <div
-      class="
-        p-3
-        border-t-[1px] border-gray-500
-        hover:text-primarygreen
-        cursor-pointer
-      "
+      class="p-3 border-t-[1px] border-gray-500 hover:text-primarygreen cursor-pointer"
       @click="$router.back()"
     >
       <font-awesome-icon icon="arrow-left" /> Go Back
@@ -45,6 +44,7 @@
 <script lang="ts">
 import { defineComponent, reactive } from "vue";
 import { Logo } from "../shared";
+import { useUserStore } from "../../store/user";
 
 export default defineComponent({
   name: "LeftSidebar",
@@ -52,6 +52,7 @@ export default defineComponent({
     Logo,
   },
   setup() {
+    const userStore = useUserStore();
     const links = reactive([
       {
         title: "Home",
@@ -69,6 +70,7 @@ export default defineComponent({
 
     return {
       links,
+      userStore,
     };
   },
 });

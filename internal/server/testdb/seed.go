@@ -21,7 +21,7 @@ import (
 func SeedUser(dbClient *mongo.Client, cfg *config.Config) (*models.User, error) {
 	faker := faker.NewFaker()
 	userRepo := repository.NewUserRepository(cfg, dbClient)
-	hashedPassword, err := utils.HashPassword("secret")
+	hashedPassword, err := utils.HashPassword("Secret12345!")
 	if err != nil {
 		logrus.WithError(err).Fatal("error hashing password")
 		return &models.User{}, err
@@ -31,6 +31,7 @@ func SeedUser(dbClient *mongo.Client, cfg *config.Config) (*models.User, error) 
 		ID:        primitive.NewObjectID(),
 		Firstname: faker.RandomPersonFirstName(),
 		Lastname:  faker.RandomPersonLastName(),
+		Username:  faker.RandomUsername(),
 		Email:     faker.RandomEmail(),
 		Password:  hashedPassword,
 		CreatedAt: primitive.NewDateTimeFromTime(time.Now()),
@@ -45,7 +46,7 @@ func SeedUser(dbClient *mongo.Client, cfg *config.Config) (*models.User, error) 
 }
 
 // create a random api key for testing purposes
-func SeedAPIKey(dbClient *mongo.Client, cfg *config.Config, userID primitive.ObjectID) (*models.APIKey, string, error) {
+func SeedAPIKey(dbClient *mongo.Client, cfg *config.Config, userID primitive.ObjectID, permissions models.APIKeyPermissionsList) (*models.APIKey, string, error) {
 	faker := faker.NewFaker()
 	apiKeyRepo := repository.NewAPIKeyRepository(cfg, dbClient)
 
@@ -61,17 +62,18 @@ func SeedAPIKey(dbClient *mongo.Client, cfg *config.Config, userID primitive.Obj
 	dk := pbkdf2.Key([]byte(key), []byte(salt), 4096, 32, sha256.New)
 	encodedKey := base64.URLEncoding.EncodeToString(dk)
 	apiKey := &models.APIKey{
-		Name:      faker.RandomProductName(),
-		KeyType:   "seed",
-		Role:      "seed",
-		UserID:    userID,
-		MaskID:    maskID,
-		Hash:      encodedKey,
-		Salt:      salt,
-		Key:       key,
-		ExpiresAt: primitive.NewDateTimeFromTime(time.Now().Add(time.Hour)),
-		CreatedAt: primitive.NewDateTimeFromTime(time.Now()),
-		UpdatedAt: primitive.NewDateTimeFromTime(time.Now()),
+		Name:        faker.RandomProductName(),
+		KeyType:     "seed",
+		Role:        "seed",
+		UserID:      userID,
+		MaskID:      maskID,
+		Hash:        encodedKey,
+		Salt:        salt,
+		Key:         key,
+		ExpiresAt:   primitive.NewDateTimeFromTime(time.Now().Add(time.Hour)),
+		CreatedAt:   primitive.NewDateTimeFromTime(time.Now()),
+		UpdatedAt:   primitive.NewDateTimeFromTime(time.Now()),
+		Permissions: permissions,
 	}
 	_, err = apiKeyRepo.CreateAPIKey(apiKey)
 	if err != nil {
@@ -82,7 +84,7 @@ func SeedAPIKey(dbClient *mongo.Client, cfg *config.Config, userID primitive.Obj
 }
 
 // create a random bucket for testing purposes
-func SeedBucket(dbClient *mongo.Client, cfg *config.Config, userID primitive.ObjectID) (*models.Bucket, error) {
+func SeedBucket(dbClient *mongo.Client, cfg *config.Config, userID primitive.ObjectID, permissions models.BucketPermissionsList) (*models.Bucket, error) {
 	faker := faker.NewFaker()
 	bucketRepo := repository.NewBucketRepository(cfg, dbClient)
 
@@ -94,6 +96,7 @@ func SeedBucket(dbClient *mongo.Client, cfg *config.Config, userID primitive.Obj
 		Description: "a seed bucket",
 		CreatedAt:   primitive.NewDateTimeFromTime(time.Now()),
 		UpdatedAt:   primitive.NewDateTimeFromTime(time.Now()),
+		Permissions: permissions,
 	}
 
 	_, err := bucketRepo.CreateBucket(newBucket)
@@ -117,6 +120,7 @@ func SeedBucketItem(dbClient *mongo.Client, cfg *config.Config, userID primitive
 		BucketUID: bucketUID,
 		Key:       faker.RandomUUID().String(),
 		Data:      data,
+		TTL:       3600,
 		CreatedAt: primitive.NewDateTimeFromTime(time.Now()),
 		UpdatedAt: primitive.NewDateTimeFromTime(time.Now()),
 	}

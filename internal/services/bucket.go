@@ -8,6 +8,7 @@ import (
 	"keeper/internal/models"
 	"keeper/internal/repository"
 	"keeper/internal/utils"
+	"net/url"
 	"time"
 
 	"github.com/dchest/uniuri"
@@ -16,9 +17,9 @@ import (
 )
 
 type BucketService struct {
-	BucketRepository     repository.IBucketRepository
-	BucketItemRepository repository.IBucketItemRepository
-	Cfg                  *config.Config
+	bucketRepo     repository.IBucketRepository
+	bucketItemRepo repository.IBucketItemRepository
+	cfg            *config.Config
 }
 
 type IBucketService interface {
@@ -26,15 +27,16 @@ type IBucketService interface {
 	FindBucketByID(id string) (*dto.BucketDetailsOutput, error)
 	FindBucketByUID(uid string) (*dto.BucketDetailsOutput, error)
 	ListUserBuckets(userID string) ([]dto.BucketDetailsOutput, error)
+	ListUserBucketsPaged(userID string, queryParams url.Values) ([]dto.BucketDetailsOutput, utils.PageInfo, error)
 	UpdateBucket(uid string, data dto.UpdateBucketInputDTO) error
 	DeleteBucket(uid string) error
 }
 
 func NewBucketService(cfg *config.Config, bucketRepo repository.IBucketRepository, bucketItemRepo repository.IBucketItemRepository) IBucketService {
 	return &BucketService{
-		BucketRepository:     bucketRepo,
-		BucketItemRepository: bucketItemRepo,
-		Cfg:                  cfg,
+		bucketRepo:     bucketRepo,
+		bucketItemRepo: bucketItemRepo,
+		cfg:            cfg,
 	}
 }
 
@@ -54,7 +56,7 @@ func (b *BucketService) CreateBucket(data dto.CreateBucketInputDTO, userID primi
 	var permissions models.BucketPermissionsList
 	if len(data.Permissions) == 0 {
 		// set the default list of bucket permissions
-		permissions = models.BucketPermissions
+		permissions = models.BUCKET_PERMISSIONS
 	} else {
 		permissions = data.Permissions
 	}
@@ -70,7 +72,7 @@ func (b *BucketService) CreateBucket(data dto.CreateBucketInputDTO, userID primi
 	newBucket.UID = newBucketUID
 	newBucket.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
 	newBucket.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
-	id, err := b.BucketRepository.CreateBucket(newBucket)
+	id, err := b.bucketRepo.CreateBucket(newBucket)
 	if err != nil {
 		logrus.WithError(err).Error("error saving bucket to database")
 		return &dto.CreateBucketOutputDTO{}, fmt.Errorf("error saving bucket to database: %s", err.Error())
@@ -91,12 +93,12 @@ func (b *BucketService) FindBucketByID(id string) (*dto.BucketDetailsOutput, err
 	if utils.IsStringEmpty(id) {
 		return &dto.BucketDetailsOutput{}, ErrBucketIDIsEmpty
 	}
-	bucket, err := b.BucketRepository.FindBucketByID(id)
+	bucket, err := b.bucketRepo.FindBucketByID(id)
 	if err != nil {
 		return &dto.BucketDetailsOutput{}, err
 	}
 	// find the bucket items
-	bucketItems, err := b.BucketItemRepository.FindBucketItems(bucket.UID)
+	bucketItems, err := b.bucketItemRepo.FindBucketItems(bucket.UID)
 	if err != nil && !errors.Is(err, models.ErrBucketItemNotFound) {
 		return &dto.BucketDetailsOutput{}, err
 	}
@@ -118,12 +120,12 @@ func (b *BucketService) FindBucketByUID(uid string) (*dto.BucketDetailsOutput, e
 	if utils.IsStringEmpty(uid) {
 		return &dto.BucketDetailsOutput{}, ErrBucketUIDIsEmpty
 	}
-	bucket, err := b.BucketRepository.FindBucketByUID(uid)
+	bucket, err := b.bucketRepo.FindBucketByUID(uid)
 	if err != nil {
 		return &dto.BucketDetailsOutput{}, err
 	}
 	// find the bucket items
-	bucketItems, err := b.BucketItemRepository.FindBucketItems(bucket.UID)
+	bucketItems, err := b.bucketItemRepo.FindBucketItems(bucket.UID)
 	if err != nil && !errors.Is(err, models.ErrBucketItemsNotFound) {
 		return &dto.BucketDetailsOutput{}, err
 	}
@@ -140,23 +142,62 @@ func (b *BucketService) FindBucketByUID(uid string) (*dto.BucketDetailsOutput, e
 	}, nil
 }
 
-// Service for listing all a user's buckets with bucket items
-func (b *BucketService) ListUserBuckets(userID string) ([]dto.BucketDetailsOutput, error) {
+// Service for listing all a user's buckets with bucket items (using pagination and filtering)
+func (b *BucketService) ListUserBucketsPaged(userID string, queryParams url.Values) ([]dto.BucketDetailsOutput, utils.PageInfo, error) {
 	if utils.IsStringEmpty(userID) {
-		return []dto.BucketDetailsOutput{}, ErrUserIDIsEmpty
+		return nil, utils.PageInfo{}, ErrUserIDIsEmpty
 	}
 	userBucketDetailsOutput := []dto.BucketDetailsOutput{}
-	// find all user's buckets
-	userBuckets, err := b.BucketRepository.FindBucketsByUserID(userID)
+	filter, findOpts, paginationParams, err := utils.ParseRequestQueryParams(queryParams)
 	if err != nil {
-		return []dto.BucketDetailsOutput{}, err
+		return nil, utils.PageInfo{}, err
+	}
+	// find all user's buckets
+	userBuckets, pageInfo, err := b.bucketRepo.FindBucketsByUserIDPaged(userID, filter, findOpts, paginationParams)
+	if err != nil {
+		return nil, utils.PageInfo{}, err
 	}
 	// construct the bucket detals response
 	for _, bucket := range userBuckets {
-		bucketItems, err := b.BucketItemRepository.FindBucketItems(bucket.UID)
+		bucketItems, err := b.bucketItemRepo.FindBucketItems(bucket.UID)
 		if err != nil && !errors.Is(err, models.ErrBucketItemsNotFound) {
 			logrus.WithError(err).Errorf("error fetching bucket items for bucket: %s", bucket.UID)
-			return []dto.BucketDetailsOutput{}, err
+			return nil, utils.PageInfo{}, err
+		}
+		bucketDetails := dto.BucketDetailsOutput{
+			ID:          bucket.ID,
+			UID:         bucket.UID,
+			UserID:      bucket.UserID,
+			Name:        bucket.Name,
+			Description: bucket.Description,
+			Permissions: bucket.Permissions,
+			CreatedAt:   bucket.CreatedAt,
+			UpdatedAt:   bucket.UpdatedAt,
+			BucketItems: bucketItems,
+		}
+		// append single bucket's details to the final response
+		userBucketDetailsOutput = append(userBucketDetailsOutput, bucketDetails)
+	}
+	return userBucketDetailsOutput, pageInfo, nil
+}
+
+// Service for listing all a user's buckets with bucket items
+func (b *BucketService) ListUserBuckets(userID string) ([]dto.BucketDetailsOutput, error) {
+	if utils.IsStringEmpty(userID) {
+		return nil, ErrUserIDIsEmpty
+	}
+	userBucketDetailsOutput := []dto.BucketDetailsOutput{}
+	// find all user's buckets
+	userBuckets, err := b.bucketRepo.FindBucketsByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+	// construct the bucket detals response
+	for _, bucket := range userBuckets {
+		bucketItems, err := b.bucketItemRepo.FindBucketItems(bucket.UID)
+		if err != nil && !errors.Is(err, models.ErrBucketItemsNotFound) {
+			logrus.WithError(err).Errorf("error fetching bucket items for bucket: %s", bucket.UID)
+			return nil, err
 		}
 		bucketDetails := dto.BucketDetailsOutput{
 			ID:          bucket.ID,
@@ -186,7 +227,7 @@ func (b *BucketService) UpdateBucket(uid string, data dto.UpdateBucketInputDTO) 
 		UID:         uid,
 	}
 	updatedBucket.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
-	err := b.BucketRepository.UpdateBucket(updatedBucket)
+	err := b.bucketRepo.UpdateBucket(updatedBucket)
 	if err != nil {
 		return err
 	}
@@ -198,11 +239,11 @@ func (b *BucketService) DeleteBucket(uid string) error {
 		return ErrBucketUIDIsEmpty
 	}
 	// delete all the bucket items
-	err := b.BucketItemRepository.DeleteBucketItems(uid)
+	err := b.bucketItemRepo.DeleteBucketItems(uid)
 	if err != nil {
 		return err
 	}
-	err = b.BucketRepository.DeleteBucketByUID(uid)
+	err = b.bucketRepo.DeleteBucketByUID(uid)
 	if err != nil {
 		return err
 	}

@@ -80,7 +80,7 @@ func (m *Middleware) RequireRefreshToken(next echo.HandlerFunc) echo.HandlerFunc
 		authResponse, err := authRealm.Authenticate(cred)
 		if err != nil {
 			return c.JSON(http.StatusUnauthorized, map[string]interface{}{
-				"message": err,
+				"message": err.Error(),
 			})
 		}
 		c.Set("user", authResponse.User)

@@ -1,4 +1,4 @@
-export { default as Button } from "./Button.vue";
+export { default as CustomButton } from "./CustomButton.vue";
 export { default as Container } from "./Container.vue";
 export { default as DefaultProfileImage } from "./DefaultProfileImage.vue";
 export { default as Divider } from "./Divider.vue";
@@ -8,4 +8,4 @@ export { default as Hero } from "./Hero.vue";
 export { default as Logo } from "./Logo.vue";
 export { default as Modal } from "./Modal.vue";
 export { default as NavBack } from "./NavBack.vue";
-export { default as Navbar } from "./Navbar.vue";
+export { default as NavBar } from "./NavBar.vue";

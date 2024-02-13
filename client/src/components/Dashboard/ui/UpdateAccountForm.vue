@@ -1,24 +1,29 @@
 <template>
   <div class="w-full py-4">
-    <h1 class="text-2xl font-bold mb-3">Update Profile</h1>
-    <form class="space-y-3" @submit.prevent="handleUpdateAccount">
+    <h1 class="text-2xl font-bold mb-3">
+      Update Profile
+    </h1>
+    <form
+      class="space-y-3"
+      @submit.prevent="handleUpdateAccount"
+    >
       <FormRow>
         <div>
           <div class="relative">
             <input
+              id="firstname"
+              v-model="formState.firstname"
               type="text"
               name="firstname"
-              id="firstname"
-              v-on:blur="handleBlur('firstname')"
-              v-model="formState.firstname"
               placeholder="Enter Firstname"
               :class="`${v$.firstname.$errors.length && 'input--error'}`"
-            />
+              @blur="handleBlur('firstname')"
+            >
           </div>
           <div
-            class="input-errors"
             v-for="error of v$.firstname.$errors"
             :key="error.$uid"
+            class="input-errors"
           >
             <p class="text-red-600">
               {{ parseErrorMessage(String(error.$message), "Firstname") }}
@@ -29,19 +34,19 @@
         <div>
           <div class="relative">
             <input
+              id="lastname"
+              v-model="formState.lastname"
               type="text"
               name="lastname"
-              id="lastname"
-              v-on:blur="handleBlur('lastname')"
-              v-model="formState.lastname"
               placeholder="Enter Lastname"
               :class="`${v$.lastname.$errors.length && 'input--error'}`"
-            />
+              @blur="handleBlur('lastname')"
+            >
           </div>
           <div
-            class="input-errors"
             v-for="error of v$.lastname.$errors"
             :key="error.$uid"
+            class="input-errors"
           >
             <p class="text-red-600">
               {{ parseErrorMessage(String(error.$message), "Lastname") }}
@@ -52,19 +57,19 @@
       <div>
         <div class="relative">
           <input
+            id="email"
+            v-model="formState.email"
             type="text"
             name="email"
-            id="email"
-            v-on:blur="handleBlur('email')"
-            v-model="formState.email"
             placeholder="Enter Email"
             :class="`${v$.email.$errors.length && 'input--error'}`"
-          />
+            @blur="handleBlur('email')"
+          >
         </div>
         <div
-          class="input-errors"
           v-for="error of v$.email.$errors"
           :key="error.$uid"
+          class="input-errors"
         >
           <p class="text-red-600">
             {{ parseErrorMessage(String(error.$message), "Email") }}
@@ -72,7 +77,7 @@
         </div>
       </div>
 
-      <Button
+      <CustomButton
         title="Update Profile"
         type="submit"
         :disabled="v$.$invalid"
@@ -86,15 +91,13 @@
 import { defineComponent, reactive, ref } from "vue";
 import { required, email, minLength } from "@vuelidate/validators";
 import { useVuelidate } from "@vuelidate/core";
-import Button from "../../shared/Button.vue";
-import FormRow from "../../shared/FormRow.vue";
-import FormInput from "../../shared/FormInput.vue";
+import { CustomButton, FormRow } from "../../shared";
 import { parseErrorMessage } from "../../../common/utils/form";
 import { useUserStore } from "../../../store/user";
 
 export default defineComponent({
   name: "UpdateAccountForm",
-  components: { Button, FormInput, FormRow },
+  components: { CustomButton, FormRow },
   setup() {
     const userStore = useUserStore();
     const isLoading = ref<boolean>(false);

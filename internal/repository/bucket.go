@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"keeper/internal/config"
 	"keeper/internal/models"
+	"keeper/internal/utils"
 
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
@@ -106,6 +107,26 @@ func (r *BucketRepository) FindBucketByUID(uid string) (*models.Bucket, error) {
 	}
 	logrus.Info("found bucket: ", bucket)
 	return bucket, nil
+}
+
+// Finds an array of a user's buckets (using pagination and filtering)
+func (r *BucketRepository) FindBucketsByUserIDPaged(userID string, filter bson.M, findOpts *options.FindOptions, paginationParams utils.PaginationParams) ([]models.Bucket, utils.PageInfo, error) {
+	// Finds bucket items (using pagination and filtering)
+	bucketItems := []models.Bucket{}
+
+	// add the user_id to the filter object
+	ID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return nil, utils.PageInfo{}, models.ErrInvalidObjectID
+	}
+	filter["user_id"] = ID
+
+	results, pageInfo, err := utils.FindManyWithPagination(r.collection, bucketDetailsProjection, bucketItems, r.ctx, filter, findOpts, paginationParams)
+	fmt.Println(results)
+	if err != nil {
+		return nil, utils.PageInfo{}, err
+	}
+	return results.([]models.Bucket), pageInfo, nil
 }
 
 // Returns an array of a user's buckets

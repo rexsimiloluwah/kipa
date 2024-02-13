@@ -19,6 +19,11 @@ export type CreateUserData = {
   password: string;
 };
 
+export type LoginUserData = {
+  email: string;
+  password: string;
+};
+
 export type UpdateUserData = {
   firstname: string;
   lastname: string;

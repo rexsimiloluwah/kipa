@@ -1,5 +1,75 @@
 basePath: /api/v1
 definitions:
+  dto.APIKeysIDsInputDTO:
+    properties:
+      ids:
+        items:
+          type: string
+        minItems: 1
+        type: array
+    type: object
+  dto.CreateAPIKeyInputDTO:
+    properties:
+      expires_at:
+        example: "2022-09-30T15:04:05-07:00"
+        type: string
+      key_type:
+        example: ""
+        maxLength: 150
+        type: string
+      name:
+        example: test-key
+        type: string
+      permissions:
+        example:
+        - ""
+        items:
+          type: string
+        type: array
+      role:
+        example: ""
+        maxLength: 150
+        type: string
+    required:
+    - name
+    type: object
+  dto.CreateBucketInputDTO:
+    properties:
+      description:
+        example: ""
+        maxLength: 200
+        minLength: 2
+        type: string
+      name:
+        example: test-bucket
+        maxLength: 150
+        minLength: 2
+        type: string
+      permissions:
+        example:
+        - ""
+        items:
+          type: string
+        type: array
+    required:
+    - name
+    type: object
+  dto.CreateBucketItemInputDTO:
+    properties:
+      data:
+        example: ""
+        type: string
+      key:
+        example: test-key
+        maxLength: 200
+        minLength: 2
+        type: string
+      ttl:
+        minimum: 0
+        type: integer
+    required:
+    - key
+    type: object
   dto.CreateUserInputDTO:
     properties:
       email:
@@ -7,16 +77,32 @@ definitions:
         type: string
       firstname:
         example: Similoluwa
+        minLength: 2
         type: string
       lastname:
         example: Okunowo
+        minLength: 2
         type: string
       password:
         example: '********'
         type: string
       username:
         example: ""
+        minLength: 2
         type: string
+    required:
+    - email
+    - firstname
+    - lastname
+    - password
+    type: object
+  dto.ForgotPasswordInputDTO:
+    properties:
+      email:
+        example: user@gmail.com
+        type: string
+    required:
+    - email
     type: object
   dto.LoginUserInputDTO:
     properties:
@@ -26,6 +112,64 @@ definitions:
       password:
         example: '********'
         type: string
+    required:
+    - email
+    - password
+    type: object
+  dto.ResetPasswordInputDTO:
+    properties:
+      new_password:
+        example: '********'
+        type: string
+      token:
+        type: string
+    required:
+    - new_password
+    - token
+    type: object
+  dto.UpdateAPIKeyInputDTO:
+    properties:
+      expires_at:
+        example: "2022-09-30T15:04:05-07:00"
+        type: string
+      key_type:
+        example: ""
+        maxLength: 150
+        type: string
+      name:
+        example: updated-test-key
+        type: string
+      permissions:
+        example:
+        - ""
+        items:
+          type: string
+        type: array
+      role:
+        example: ""
+        maxLength: 150
+        type: string
+    required:
+    - name
+    type: object
+  dto.UpdateBucketInputDTO:
+    properties:
+      description:
+        example: ""
+        maxLength: 150
+        minLength: 2
+        type: string
+      name:
+        example: test-bucket
+        maxLength: 150
+        minLength: 2
+        type: string
+      permissions:
+        example:
+        - ""
+        items:
+          type: string
+        type: array
     type: object
   dto.UpdateUserInputDTO:
     properties:
@@ -34,12 +178,15 @@ definitions:
         type: string
       firstname:
         example: Similoluwa
+        minLength: 2
         type: string
       lastname:
         example: Okunowo
+        minLength: 2
         type: string
       username:
         example: ""
+        minLength: 2
         type: string
     type: object
   dto.UpdateUserPasswordInputDTO:
@@ -47,6 +194,15 @@ definitions:
       password:
         example: '********'
         type: string
+    required:
+    - password
+    type: object
+  dto.VerifyEmailInputDTO:
+    properties:
+      token:
+        type: string
+    required:
+    - token
     type: object
   models.ErrorResponse:
     properties:
@@ -55,14 +211,40 @@ definitions:
       status:
         type: boolean
     type: object
+  models.PaginatedSuccessResponse:
+    properties:
+      data:
+        items:
+          type: object
+        type: array
+      message:
+        type: string
+      page_info:
+        $ref: '#/definitions/utils.PageInfo'
+      status:
+        type: boolean
+    type: object
   models.SuccessResponse:
     properties:
       data:
-        type: string
+        items:
+          type: object
+        type: array
       message:
         type: string
       status:
         type: boolean
+    type: object
+  utils.PageInfo:
+    properties:
+      current_page:
+        type: integer
+      has_next_page:
+        type: boolean
+      total_items:
+        type: integer
+      total_pages:
+        type: integer
     type: object
 host: localhost:5050
 info:
@@ -78,6 +260,319 @@ info:
   title: Kipa
   version: 0.1.0
 paths:
+  /api_key:
+    post:
+      description: Create a new API key
+      parameters:
+      - description: Create API Key Data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateAPIKeyInputDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: CreateAPIKey
+      tags:
+      - APIKey
+  /api_key/{apiKeyId}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a single API key that matches the passed API key ID
+      parameters:
+      - description: API Key ID
+        in: path
+        name: apiKeyId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: DeleteAPIKey
+      tags:
+      - APIKey
+    get:
+      consumes:
+      - application/json
+      description: Returns the API key that matches the ID
+      parameters:
+      - description: API Key ID
+        in: path
+        name: apiKeyId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: FindAPIKeyID
+      tags:
+      - APIKey
+    put:
+      consumes:
+      - application/json
+      description: Update an API key
+      parameters:
+      - description: Update API Key Data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateAPIKeyInputDTO'
+      - description: API Key ID
+        in: path
+        name: apiKeyId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: UpdateAPIKey
+      tags:
+      - APIKey
+  /api_key/{apiKeyId}/revoke:
+    put:
+      consumes:
+      - application/json
+      description: Revoke a single API key that matches the passed API key ID
+      parameters:
+      - description: API Key ID
+        in: path
+        name: apiKeyId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: RevokeAPIKey
+      tags:
+      - APIKey
+  /api_keys:
+    delete:
+      consumes:
+      - application/json
+      description: Delete multiple API keys from a list of API key IDs
+      parameters:
+      - description: API Key IDs
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/dto.APIKeysIDsInputDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: DeleteAPIKeys
+      tags:
+      - APIKey
+    get:
+      consumes:
+      - application/json
+      description: Returns a list of the authenticated user's API keys
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: FindUserAPIKeys
+      tags:
+      - APIKey
+  /api_keys/revoke:
+    put:
+      consumes:
+      - application/json
+      description: Revoke multiple API keys from a list of API key IDs
+      parameters:
+      - description: API Key IDs
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/dto.APIKeysIDsInputDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: RevokeAPIKeys
+      tags:
+      - APIKey
+  /auth/forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Sends a reset password link to the user's email if it exists in
+        the database
+      parameters:
+      - description: Forgot Password Data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ForgotPasswordInputDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Forgot Password
+      tags:
+      - Auth
   /auth/login:
     post:
       consumes:
@@ -179,6 +674,40 @@ paths:
       summary: Register user
       tags:
       - Auth
+  /auth/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Reset a user's password
+      parameters:
+      - description: Reset Password Data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ResetPasswordInputDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Reset Password
+      tags:
+      - Auth
   /auth/user:
     get:
       consumes:
@@ -208,6 +737,476 @@ paths:
       summary: Get Auth User
       tags:
       - Auth
+  /bucket:
+    post:
+      description: Create a new bucket
+      parameters:
+      - description: Create Bucket Data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateBucketInputDTO'
+      - description: Should return full response
+        in: query
+        name: full
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: CreateBucket
+      tags:
+      - Bucket
+  /bucket/{bucketUID}:
+    delete:
+      description: Delete a user's bucket
+      parameters:
+      - description: Bucket UID
+        in: path
+        name: bucketUID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: DeleteBucket
+      tags:
+      - Bucket
+    get:
+      description: Returns a bucket that matches the passed UID
+      parameters:
+      - description: Bucket UID
+        in: path
+        name: bucketUID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: FindBucketByUID
+      tags:
+      - Bucket
+    put:
+      description: Update a user's bucket
+      parameters:
+      - description: Update Bucket Data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateBucketInputDTO'
+      - description: Bucket UID
+        in: path
+        name: bucketUID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: UpdateBucket
+      tags:
+      - Bucket
+  /buckets:
+    get:
+      description: Returns a list of the authenticated user's buckets (with pagination,
+        sorting, and filtering)
+      parameters:
+      - description: Current Page
+        in: query
+        name: page
+        type: integer
+      - description: Per Page
+        in: query
+        name: perPage
+        type: integer
+      - description: Sort By
+        in: query
+        name: sortBy
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.PaginatedSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: ListUserBucketsPaged
+      tags:
+      - Bucket
+  /buckets/all:
+    get:
+      description: Returns a list of the authenticated user's buckets
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: ListUserBuckets
+      tags:
+      - Bucket
+  /item/{bucketUID}:
+    post:
+      description: Create a new bucket item
+      parameters:
+      - description: Create Bucket Item Data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateBucketItemInputDTO'
+      - description: Bucket UID
+        in: path
+        name: bucketUID
+        required: true
+        type: string
+      - description: Should return full response
+        in: query
+        name: full
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: CreateBucketItem
+      tags:
+      - BucketItem
+  /item/{bucketUID}/{key}:
+    get:
+      description: Returns an item from a bucket matching the passed key
+      parameters:
+      - description: Bucket UID
+        in: path
+        name: bucketUID
+        required: true
+        type: string
+      - description: Key name
+        in: path
+        name: key
+        required: true
+        type: string
+      - description: Should return full response
+        in: query
+        name: full
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: FindBucketItemByKeyName
+      tags:
+      - BucketItem
+  /items/{bucketUID}:
+    get:
+      description: Returns a list of all the items contained in a bucket (supports
+        pagination, filtering, and sorting)
+      parameters:
+      - description: Bucket UID
+        in: path
+        name: bucketUID
+        required: true
+        type: string
+      - description: Should return full response
+        in: query
+        name: full
+        type: boolean
+      - description: Current Page
+        in: query
+        name: page
+        type: integer
+      - description: Per Page
+        in: query
+        name: perPage
+        type: integer
+      - description: Sort By
+        in: query
+        name: sortBy
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.PaginatedSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: ListBucketItemsPaged
+      tags:
+      - BucketItem
+  /items/{bucketUID}/{key}:
+    delete:
+      description: Delete an item from a bucket matching the passed key
+      parameters:
+      - description: Bucket UID
+        in: path
+        name: bucketUID
+        required: true
+        type: string
+      - description: Key name
+        in: path
+        name: key
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: DeleteBucketItemByKeyName
+      tags:
+      - BucketItem
+    put:
+      description: Update an item from a bucket matching the passed key
+      parameters:
+      - description: Bucket UID
+        in: path
+        name: bucketUID
+        required: true
+        type: string
+      - description: Key name
+        in: path
+        name: key
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: UpdateBucketItemByKeyName
+      tags:
+      - BucketItem
+  /public/apikey-permissions:
+    get:
+      description: Returns a list of the API key permissions
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: GetAPIKeyPermissionsList
+      tags:
+      - PublicRoutes
+  /public/bucket-permissions:
+    get:
+      description: Returns a list of the bucket permissions
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: GetBucketPermissionsList
+      tags:
+      - PublicRoutes
+  /public/healthcheck:
+    get:
+      description: Check if the server is healthy
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: HealthCheck
+      tags:
+      - PublicRoutes
   /user:
     delete:
       description: Delete a user's account
@@ -302,40 +1301,18 @@ paths:
       summary: UpdateUserPassword
       tags:
       - User
-  /users:
-    get:
-      description: Returns users data
-      produces:
+  /user/verify-email:
+    post:
+      consumes:
       - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.SuccessResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/models.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/models.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/models.ErrorResponse'
-      summary: GetAllUsers
-      tags:
-      - User
-  /users/{userId}:
-    get:
-      description: Returns user data for the passed user ID
+      description: Verify a User's Email
       parameters:
-      - description: Video ID
-        in: path
-        name: userId
+      - description: Email Verification Data
+        in: body
+        name: data
         required: true
-        type: string
+        schema:
+          $ref: '#/definitions/dto.VerifyEmailInputDTO'
       produces:
       - application/json
       responses:
@@ -355,9 +1332,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/models.ErrorResponse'
-      summary: GetUserByID
+      summary: Verify a User's Email
       tags:
-      - User
+      - Auth
 schemes:
 - http
 securityDefinitions:

@@ -2,6 +2,11 @@ import axios from "../lib/axios";
 import { UpdateUserData } from "../common/types/user";
 
 class UserService {
+  /**
+   * Update user
+   * @param data // Updated user payload
+   * @returns
+   */
   updateUser(data: UpdateUserData) {
     return new Promise((resolve, reject) => {
       axios
@@ -16,6 +21,11 @@ class UserService {
     });
   }
 
+  /**
+   * Update user password
+   * @param data // Updated password payload
+   * @returns
+   */
   updateUserPassword(data: { password: string }) {
     return new Promise((resolve, reject) => {
       axios
@@ -30,6 +40,10 @@ class UserService {
     });
   }
 
+  /**
+   * Delete user
+   * @returns
+   */
   deleteUser() {
     return new Promise((resolve, reject) => {
       axios

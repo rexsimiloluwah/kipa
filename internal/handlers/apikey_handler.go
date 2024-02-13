@@ -38,13 +38,13 @@ func NewAPIKeyHandler(cfg *config.Config, dbClient *mongo.Client) IAPIKeyHandler
 	}
 }
 
-// CreateAPIKey godoc
+// CreateAPIKey  godoc
 // @Summary      CreateAPIKey
 // @Description  Create a new API key
 // @Tags         APIKey
 // @Produce      json
-// @Param data body dto.CreateAPIKeyInputDTO true "Create API Key Data"
-// @Security BearerAuth
+// @Param        data body dto.CreateAPIKeyInputDTO true "Create API Key Data"
+// @Security     BearerAuth
 // @Success      200  {object} 	models.SuccessResponse
 // @Failure      400  {object} 	models.ErrorResponse
 // @Failure      404  {object}  models.ErrorResponse
@@ -73,6 +73,19 @@ func (h *APIKeyHandler) CreateAPIKey(c echo.Context) error {
 	})
 }
 
+// FindAPIKeyID godoc
+// @Summary      FindAPIKeyID
+// @Description  Returns the API key that matches the ID
+// @Tags         APIKey
+// @Accept       json
+// @Produce      json
+// @Param        apiKeyId path string true "API Key ID"
+// @Security     BearerAuth
+// @Success      200  {object} 	models.SuccessResponse
+// @Failure      400  {object} 	models.ErrorResponse
+// @Failure      404  {object}  models.ErrorResponse
+// @Failure      500  {object}  models.ErrorResponse
+// @Router /api_key/{apiKeyId} [get]
 func (h *APIKeyHandler) FindAPIKeyByID(c echo.Context) error {
 	// retrieve the apiKeyID
 	apiKeyID := c.Param("apiKeyId")
@@ -87,6 +100,18 @@ func (h *APIKeyHandler) FindAPIKeyByID(c echo.Context) error {
 	})
 }
 
+// FindUserAPIKeys godoc
+// @Summary      FindUserAPIKeys
+// @Description  Returns a list of the authenticated user's API keys
+// @Tags         APIKey
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object} 	models.SuccessResponse
+// @Failure      400  {object} 	models.ErrorResponse
+// @Failure      404  {object}  models.ErrorResponse
+// @Failure      500  {object}  models.ErrorResponse
+// @Router /api_keys [get]
 func (h *APIKeyHandler) FindUserAPIKeys(c echo.Context) error {
 	// retrieve the user from context
 	user := c.Get("user").(*models.User)
@@ -101,6 +126,20 @@ func (h *APIKeyHandler) FindUserAPIKeys(c echo.Context) error {
 	})
 }
 
+// UpdateAPIKey  godoc
+// @Summary      UpdateAPIKey
+// @Description  Update an API key
+// @Tags         APIKey
+// @Accept       json
+// @Produce      json
+// @Param        data body dto.UpdateAPIKeyInputDTO true "Update API Key Data"
+// @Param 		 apiKeyId path string true "API Key ID"
+// @Security     BearerAuth
+// @Success      200  {object} 	models.SuccessResponse
+// @Failure      400  {object} 	models.ErrorResponse
+// @Failure      404  {object}  models.ErrorResponse
+// @Failure      500  {object}  models.ErrorResponse
+// @Router /api_key/{apiKeyId} [put]
 func (h *APIKeyHandler) UpdateAPIKey(c echo.Context) error {
 	// retrieve apiKeyID from param
 	apiKeyId := c.Param("apiKeyId")
@@ -124,6 +163,19 @@ func (h *APIKeyHandler) UpdateAPIKey(c echo.Context) error {
 	})
 }
 
+// RevokeAPIKeys godoc
+// @Summary      RevokeAPIKeys
+// @Description  Revoke multiple API keys from a list of API key IDs
+// @Tags         APIKey
+// @Accept       json
+// @Produce      json
+// @Param        data body dto.APIKeysIDsInputDTO true "API Key IDs"
+// @Security     BearerAuth
+// @Success      200  {object} 	models.SuccessResponse
+// @Failure      400  {object} 	models.ErrorResponse
+// @Failure      404  {object}  models.ErrorResponse
+// @Failure      500  {object}  models.ErrorResponse
+// @Router /api_keys/revoke [put]
 func (h *APIKeyHandler) RevokeAPIKeys(c echo.Context) error {
 	apiKeyIds := new(dto.APIKeysIDsInputDTO)
 	if err := c.Bind(apiKeyIds); err != nil {
@@ -141,6 +193,19 @@ func (h *APIKeyHandler) RevokeAPIKeys(c echo.Context) error {
 	return c.JSON(http.StatusOK, &models.SuccessResponse{Status: true, Message: "Successfully revoked API Key(s)!"})
 }
 
+// DeleteAPIKeys godoc
+// @Summary      DeleteAPIKeys
+// @Description  Delete multiple API keys from a list of API key IDs
+// @Tags         APIKey
+// @Accept       json
+// @Produce      json
+// @Param        data body dto.APIKeysIDsInputDTO true "API Key IDs"
+// @Security     BearerAuth
+// @Success      200  {object} 	models.SuccessResponse
+// @Failure      400  {object} 	models.ErrorResponse
+// @Failure      404  {object}  models.ErrorResponse
+// @Failure      500  {object}  models.ErrorResponse
+// @Router /api_keys [delete]
 func (h *APIKeyHandler) DeleteAPIKeys(c echo.Context) error {
 	apiKeyIds := new(dto.APIKeysIDsInputDTO)
 	if err := c.Bind(apiKeyIds); err != nil {
@@ -158,6 +223,19 @@ func (h *APIKeyHandler) DeleteAPIKeys(c echo.Context) error {
 	return c.JSON(http.StatusOK, &models.SuccessResponse{Status: true, Message: "Successfully deleted API Key(s)!"})
 }
 
+// RevokeAPIKey godoc
+// @Summary      RevokeAPIKey
+// @Description  Revoke a single API key that matches the passed API key ID
+// @Tags         APIKey
+// @Accept       json
+// @Produce      json
+// @Param        apiKeyId path string true "API Key ID"
+// @Security     BearerAuth
+// @Success      200  {object} 	models.SuccessResponse
+// @Failure      400  {object} 	models.ErrorResponse
+// @Failure      404  {object}  models.ErrorResponse
+// @Failure      500  {object}  models.ErrorResponse
+// @Router /api_key/{apiKeyId}/revoke [put]
 func (h *APIKeyHandler) RevokeAPIKey(c echo.Context) error {
 	// retrieve apiKeyID from param
 	apiKeyId := c.Param("apiKeyId")
@@ -172,6 +250,19 @@ func (h *APIKeyHandler) RevokeAPIKey(c echo.Context) error {
 	})
 }
 
+// DeleteAPIKey godoc
+// @Summary      DeleteAPIKey
+// @Description  Delete a single API key that matches the passed API key ID
+// @Tags         APIKey
+// @Accept       json
+// @Produce      json
+// @Param        apiKeyId path string true "API Key ID"
+// @Security     BearerAuth
+// @Success      200  {object} 	models.SuccessResponse
+// @Failure      400  {object} 	models.ErrorResponse
+// @Failure      404  {object}  models.ErrorResponse
+// @Failure      500  {object}  models.ErrorResponse
+// @Router /api_key/{apiKeyId} [delete]
 func (h *APIKeyHandler) DeleteAPIKey(c echo.Context) error {
 	// retrieve apiKeyID from param
 	apiKeyId := c.Param("apiKeyId")

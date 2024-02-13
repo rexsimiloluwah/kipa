@@ -2,7 +2,6 @@ package validators
 
 import (
 	"errors"
-	"fmt"
 	"net/mail"
 	"regexp"
 
@@ -46,8 +45,6 @@ func (v *Validator) Validate(i interface{}) error {
 		return nil
 	}
 	errs := err.(validator.ValidationErrors)
-
-	fmt.Println(errors.New(errs[0].Translate(v.trans)))
 
 	return errors.New(errs[0].Translate(v.trans))
 }

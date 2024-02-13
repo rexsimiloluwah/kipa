@@ -8,15 +8,16 @@ import (
 	"keeper/internal/models"
 	"keeper/internal/repository"
 	"keeper/internal/utils"
+	"net/url"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type BucketItemService struct {
-	BucketItemRepository repository.IBucketItemRepository
-	BucketRepository     repository.IBucketRepository
-	Cfg                  *config.Config
+	bucketItemRepo repository.IBucketItemRepository
+	bucketRepo     repository.IBucketRepository
+	cfg            *config.Config
 }
 
 type IBucketItemService interface {
@@ -31,13 +32,14 @@ type IBucketItemService interface {
 	FindBucketItemByID(id string) (*models.BucketItem, error)
 	FindBucketItemByKeyName(bucketUID string, key string) (*models.BucketItem, error)
 	ListBucketItems(bucketUID string) ([]models.BucketItem, error)
+	ListBucketItemsPaged(queryParams url.Values) ([]models.BucketItem, utils.PageInfo, error)
 }
 
 func NewBucketItemService(cfg *config.Config, bucketItemRepo repository.IBucketItemRepository, bucketRepo repository.IBucketRepository) IBucketItemService {
 	return &BucketItemService{
-		BucketItemRepository: bucketItemRepo,
-		BucketRepository:     bucketRepo,
-		Cfg:                  cfg,
+		bucketItemRepo: bucketItemRepo,
+		bucketRepo:     bucketRepo,
+		cfg:            cfg,
 	}
 }
 
@@ -58,18 +60,23 @@ func (b *BucketItemService) CreateBucketItem(data dto.CreateBucketItemInputDTO, 
 		return &dto.CreateBucketItemOutputDTO{}, ErrBucketUIDIsEmpty
 	}
 	// check if the bucket UID exists
-	bucket, err := b.BucketRepository.FindBucketByUID(bucketUID)
+	bucket, err := b.bucketRepo.FindBucketByUID(bucketUID)
 
 	if err != nil {
 		return &dto.CreateBucketItemOutputDTO{}, err
 	}
 
 	// enforce unique key
-	_, err = b.BucketItemRepository.FindBucketItemByKeyName(bucketUID, data.Key)
+	_, err = b.bucketItemRepo.FindBucketItemByKeyName(bucketUID, data.Key)
 
 	if !errors.Is(err, models.ErrBucketItemNotFound) {
 		return &dto.CreateBucketItemOutputDTO{}, fmt.Errorf("key '%s' already exists", data.Key)
 	}
+
+	fmt.Println(data.Data, utils.TypeOf(data.Data))
+
+	// compute the data type
+	dataType := utils.TypeOf(data.Data)
 
 	newBucketItem := &models.BucketItem{
 		UserID:    userID,
@@ -78,10 +85,11 @@ func (b *BucketItemService) CreateBucketItem(data dto.CreateBucketItemInputDTO, 
 		Key:       data.Key,
 		Data:      data.Data,
 		TTL:       data.TTL,
+		Type:      dataType,
 	}
 	newBucketItem.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
 	newBucketItem.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
-	id, err := b.BucketItemRepository.CreateBucketItem(newBucketItem)
+	id, err := b.bucketItemRepo.CreateBucketItem(newBucketItem)
 	if err != nil {
 		return &dto.CreateBucketItemOutputDTO{}, err
 	}
@@ -91,6 +99,7 @@ func (b *BucketItemService) CreateBucketItem(data dto.CreateBucketItemInputDTO, 
 		Key:       data.Key,
 		Data:      data.Data,
 		TTL:       data.TTL,
+		Type:      dataType,
 		CreatedAt: newBucketItem.CreatedAt,
 	}, nil
 }
@@ -111,7 +120,7 @@ func (b *BucketItemService) UpdateBucketItemByKeyName(data dto.UpdateBucketItemI
 		Data:      data.Data,
 		TTL:       data.TTL,
 	}
-	err := b.BucketItemRepository.UpdateBucketItem(updatedBucketItem, key)
+	err := b.bucketItemRepo.UpdateBucketItem(updatedBucketItem, key)
 	if err != nil {
 		return err
 	}
@@ -128,7 +137,7 @@ func (b *BucketItemService) IncrementIntValue(bucketUID string, key string, amou
 	if utils.IsStringEmpty(key) {
 		return ErrKeyIsEmpty
 	}
-	err := b.BucketItemRepository.IncrementIntItem(bucketUID, key, amount)
+	err := b.bucketItemRepo.IncrementIntItem(bucketUID, key, amount)
 	if err != nil {
 		return err
 	}
@@ -142,7 +151,7 @@ func (b *BucketItemService) FindBucketItemByID(id string) (*models.BucketItem, e
 	if utils.IsStringEmpty(id) {
 		return &models.BucketItem{}, ErrBucketItemIDIsEmpty
 	}
-	bucketItem, err := b.BucketItemRepository.FindBucketItemByID(id)
+	bucketItem, err := b.bucketItemRepo.FindBucketItemByID(id)
 	if err != nil {
 		return &models.BucketItem{}, err
 	}
@@ -159,11 +168,26 @@ func (b *BucketItemService) FindBucketItemByKeyName(bucketUID string, key string
 	if utils.IsStringEmpty(key) {
 		return &models.BucketItem{}, ErrKeyIsEmpty
 	}
-	bucketItem, err := b.BucketItemRepository.FindBucketItemByKeyName(bucketUID, key)
+	bucketItem, err := b.bucketItemRepo.FindBucketItemByKeyName(bucketUID, key)
 	if err != nil {
 		return &models.BucketItem{}, err
 	}
 	return bucketItem, nil
+}
+
+// Lists all the bucket items based on the parsed query values
+// Accepts the query params passed in the request object
+// Returns the found bucket items and an error
+func (b *BucketItemService) ListBucketItemsPaged(queryParams url.Values) ([]models.BucketItem, utils.PageInfo, error) {
+	filter, findOpts, paginationParams, err := utils.ParseRequestQueryParams(queryParams)
+	if err != nil {
+		return []models.BucketItem{}, utils.PageInfo{}, err
+	}
+	bucketItems, pageInfo, err := b.bucketItemRepo.FindBucketItemsPaged(filter, findOpts, paginationParams)
+	if err != nil {
+		return []models.BucketItem{}, utils.PageInfo{}, err
+	}
+	return bucketItems, pageInfo, nil
 }
 
 // List all the bucket items for a specific bucket
@@ -173,7 +197,7 @@ func (b *BucketItemService) ListBucketItems(bucketUID string) ([]models.BucketIt
 	if utils.IsStringEmpty(bucketUID) {
 		return []models.BucketItem{}, ErrBucketUIDIsEmpty
 	}
-	bucketItems, err := b.BucketItemRepository.FindBucketItems(bucketUID)
+	bucketItems, err := b.bucketItemRepo.FindBucketItems(bucketUID)
 	if err != nil {
 		return []models.BucketItem{}, err
 	}
@@ -187,7 +211,7 @@ func (b *BucketItemService) DeleteBucketItemById(id string) error {
 	if utils.IsStringEmpty(id) {
 		return ErrBucketItemIDIsEmpty
 	}
-	err := b.BucketItemRepository.DeleteBucketItemById(id)
+	err := b.bucketItemRepo.DeleteBucketItemById(id)
 	if err != nil {
 		return err
 	}
@@ -198,7 +222,7 @@ func (b *BucketItemService) DeleteBucketItemById(id string) error {
 // Accepts a list of object IDs of the desired buckets
 // Returns an error
 func (b *BucketItemService) DeleteBucketItemsById(ids []string) error {
-	err := b.BucketItemRepository.DeleteBucketItemsById(ids)
+	err := b.bucketItemRepo.DeleteBucketItemsById(ids)
 	if err != nil {
 		return err
 	}
@@ -215,7 +239,7 @@ func (b *BucketItemService) DeleteBucketItemByKeyName(bucketUID string, key stri
 	if utils.IsStringEmpty(key) {
 		return ErrKeyIsEmpty
 	}
-	err := b.BucketItemRepository.DeleteBucketItemByKeyName(bucketUID, key)
+	err := b.bucketItemRepo.DeleteBucketItemByKeyName(bucketUID, key)
 	if err != nil {
 		return err
 	}
@@ -230,7 +254,7 @@ func (b *BucketItemService) DeleteBucketItemsByKeyName(bucketUID string, keys []
 		return ErrBucketUIDIsEmpty
 	}
 	for _, key := range keys {
-		err := b.BucketItemRepository.DeleteBucketItemByKeyName(bucketUID, key)
+		err := b.bucketItemRepo.DeleteBucketItemByKeyName(bucketUID, key)
 		if err != nil {
 			return err
 		}
@@ -245,7 +269,7 @@ func (b *BucketItemService) DeleteBucketItems(bucketUID string) error {
 	if utils.IsStringEmpty(bucketUID) {
 		return ErrBucketUIDIsEmpty
 	}
-	err := b.BucketItemRepository.DeleteBucketItems(bucketUID)
+	err := b.bucketItemRepo.DeleteBucketItems(bucketUID)
 	if err != nil {
 		return err
 	}

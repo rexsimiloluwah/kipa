@@ -13,6 +13,7 @@ type BucketItem struct {
 	Key       string             `bson:"key,omitempty" json:"key"`
 	Data      interface{}        `bson:"data,omitempty" json:"data"`
 	TTL       int                `bson:"ttl,omitempty" json:"ttl"`
+	Type      string             `bson:"type,omitempty" json:"type"`
 	CreatedAt primitive.DateTime `bson:"created_at,omitempty" json:"created_at"`
 	UpdatedAt primitive.DateTime `bson:"updated_at,omitempty" json:"updated_at"`
 }

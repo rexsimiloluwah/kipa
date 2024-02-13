@@ -4,7 +4,7 @@ import App from "./App.vue";
 import router from "./router";
 import { createPinia } from "pinia";
 import { library } from "@fortawesome/fontawesome-svg-core";
-import Button from "./components/shared/Button.vue";
+import { CustomButton } from "./components/shared";
 import {
   faArrowRight,
   faGear,
@@ -21,8 +21,11 @@ import {
   faExternalLink,
   faTrashCan,
   faPencilAlt,
+  faBars,
+  faWarning,
   faClipboard,
 } from "@fortawesome/free-solid-svg-icons";
+import { faCheckCircle } from "@fortawesome/free-regular-svg-icons";
 import {
   faGithub,
   faGoogle,
@@ -59,7 +62,10 @@ library.add(
   faExternalLink,
   faTrashCan,
   faPencilAlt,
-  faClipboard
+  faClipboard,
+  faBars,
+  faWarning,
+  faCheckCircle
 );
 
 createApp(App)
@@ -67,5 +73,5 @@ createApp(App)
   .use(pinia)
   .use(Toast, toastOptions) // toast notifications
   .component("font-awesome-icon", FontAwesomeIcon) // font awesome icons access
-  .component("custom-button", Button)
+  .component("custom-button", CustomButton)
   .mount("#app");

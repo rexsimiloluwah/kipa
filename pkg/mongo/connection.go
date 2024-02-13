@@ -24,11 +24,11 @@ func NewConnection(cfg *config.Config) Connection {
 	if cfg.Env == "development" {
 		MONGO_CONN_URI = fmt.Sprintf("mongodb://%s:%s@%s:%s", cfg.DbUser, cfg.DbPassword, cfg.DbHost, cfg.DbPort)
 	} else if cfg.Env == "test" {
-		MONGO_CONN_URI = cfg.MongoDbTestConnUri
+		MONGO_CONN_URI = fmt.Sprintf("mongodb://%s:%s@%s:%s", cfg.DbUser, cfg.DbPassword, cfg.DbHost, cfg.DbPort)
 	} else {
 		MONGO_CONN_URI = cfg.MongoDbProdConnUri
 	}
-
+	fmt.Println(MONGO_CONN_URI)
 	clientOpts := options.Client().ApplyURI(MONGO_CONN_URI)
 	// context: to cancel the connection operation if it times out
 	ctx, cancel := context.WithTimeout(

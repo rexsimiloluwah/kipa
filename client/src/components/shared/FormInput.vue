@@ -2,15 +2,19 @@
   <div>
     <div class="relative">
       <input
+        :id="name"
         type="text"
         :name="name"
-        :id="name"
         :value="value"
         :placeholder="placeholder"
         class="p-3 rounded-md border-primarygreen border-2 w-full"
-      />
+      >
     </div>
-    <div class="input-errors" v-for="error of errors" :key="error.$uid">
+    <div
+      v-for="error of errors"
+      :key="error.$uid"
+      class="input-errors"
+    >
       <p class="text-red-600">
         {{
           parseErrorMessage(
@@ -37,6 +41,7 @@ export default defineComponent({
     errors: {
       type: Array as PropType<ErrorObject[]>,
       required: false,
+      default: () => [],
     },
     type: {
       type: String as PropType<"text" | "password">,

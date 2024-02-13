@@ -19,6 +19,7 @@ type IUserHandler interface {
 	UpdateUser(c echo.Context) error
 	UpdateUserPassword(c echo.Context) error
 	DeleteUser(c echo.Context) error
+	VerifyEmail(c echo.Context) error
 }
 
 type UserHandler struct {
@@ -35,17 +36,6 @@ func NewUserHandler(cfg *config.Config, dbClient *mongo.Client) IUserHandler {
 	}
 }
 
-// GetUserByID godoc
-// @Summary      GetUserByID
-// @Description  Returns user data for the passed user ID
-// @Tags         User
-// @Produce      json
-// @Param userId path string true "Video ID"
-// @Success      200  {object} 	models.SuccessResponse
-// @Failure      400  {object} 	models.ErrorResponse
-// @Failure      404  {object}  models.ErrorResponse
-// @Failure      500  {object}  models.ErrorResponse
-// @Router /users/{userId} [get]
 func (h *UserHandler) GetUserByID(c echo.Context) error {
 	userId := c.Param("userId")
 	user, err := h.userSvc.FindUserByID(userId)
@@ -62,16 +52,6 @@ func (h *UserHandler) GetUserByID(c echo.Context) error {
 	})
 }
 
-// GetAllUsers godoc
-// @Summary      GetAllUsers
-// @Description  Returns users data
-// @Tags         User
-// @Produce      json
-// @Success      200  {object} 	models.SuccessResponse
-// @Failure      400  {object} 	models.ErrorResponse
-// @Failure      404  {object}  models.ErrorResponse
-// @Failure      500  {object}  models.ErrorResponse
-// @Router /users [get]
 func (h *UserHandler) GetAllUsers(c echo.Context) error {
 	users, err := h.userSvc.FindAllUsers()
 	if err != nil {
@@ -84,13 +64,42 @@ func (h *UserHandler) GetAllUsers(c echo.Context) error {
 	})
 }
 
+// VerifyEmail godoc
+// @Summary      Verify a User's Email
+// @Description  Verify a User's Email
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        data body dto.VerifyEmailInputDTO true "Email Verification Data"
+// @Success      200  {object} 	models.SuccessResponse
+// @Failure      400  {object} 	models.ErrorResponse
+// @Failure      404  {object}  models.ErrorResponse
+// @Failure      500  {object}  models.ErrorResponse
+// @Router /user/verify-email [post]
+func (h *UserHandler) VerifyEmail(c echo.Context) error {
+	data := new(dto.VerifyEmailInputDTO)
+	if err := c.Bind(data); err != nil {
+		return c.JSON(http.StatusBadRequest, &models.ErrorResponse{Status: false, Error: err.Error()})
+	}
+	// validate the request data
+	if err := h.validator.Validate(data); err != nil {
+		return c.JSON(http.StatusBadRequest, &models.ErrorResponse{Status: false, Error: err.Error()})
+	}
+
+	err := h.userSvc.VerifyEmail(*data)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, &models.ErrorResponse{Status: false, Error: err.Error()})
+	}
+	return c.JSON(http.StatusOK, &models.SuccessResponse{Status: true, Message: "Email verification successful!"})
+}
+
 // UpdateUser godoc
 // @Summary      UpdateUser
 // @Description  Update data for a user
 // @Tags         User
 // @Produce      json
-// @Param data body dto.UpdateUserInputDTO true "Update User Data"
-// @Security BearerAuth
+// @Param        data body dto.UpdateUserInputDTO true "Update User Data"
+// @Security     BearerAuth
 // @Success      200  {object} 	models.SuccessResponse
 // @Failure      400  {object} 	models.ErrorResponse
 // @Failure      404  {object}  models.ErrorResponse
@@ -119,8 +128,8 @@ func (h *UserHandler) UpdateUser(c echo.Context) error {
 // @Description  Update a user's password
 // @Tags         User
 // @Produce      json
-// @Param data body dto.UpdateUserPasswordInputDTO true "Update User Password Data"
-// @Security BearerAuth
+// @Param        data body dto.UpdateUserPasswordInputDTO true "Update User Password Data"
+// @Security     BearerAuth
 // @Success      200  {object} 	models.SuccessResponse
 // @Failure      400  {object} 	models.ErrorResponse
 // @Failure      404  {object}  models.ErrorResponse
@@ -152,7 +161,7 @@ func (h *UserHandler) UpdateUserPassword(c echo.Context) error {
 // @Description  Delete a user's account
 // @Tags         User
 // @Produce      json
-// @Security BearerAuth
+// @Security     BearerAuth
 // @Success      200  {object} 	models.SuccessResponse
 // @Failure      400  {object} 	models.ErrorResponse
 // @Failure      404  {object}  models.ErrorResponse

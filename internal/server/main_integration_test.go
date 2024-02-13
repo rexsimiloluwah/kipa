@@ -14,6 +14,7 @@ import (
 	mongoutils "keeper/pkg/mongo"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -105,7 +106,7 @@ func (s *ServerIntegrationTestSuite) TestAuth_RegisterUser() {
 		Lastname:  "tinubu",
 		Email:     "bolatinubu@gmail.com",
 		Username:  "bolatinubu",
-		Password:  "secret",
+		Password:  "Secret123!",
 	})
 	if err != nil {
 		logrus.WithError(err).Error("error marshalling user data")
@@ -137,7 +138,7 @@ func (s *ServerIntegrationTestSuite) TestAuth_RegisterExistingUser() {
 		Lastname:  newUser.Lastname,
 		Email:     newUser.Email,
 		Username:  newUser.Username,
-		Password:  newUser.Password,
+		Password:  "Secret12345!",
 	})
 	assert.Nil(s.T(), err)
 
@@ -164,7 +165,7 @@ func (s *ServerIntegrationTestSuite) TestAuth_LoginUser() {
 	url := fmt.Sprintf("%s/auth/login", BASE_URL)
 	body, err := json.Marshal(&dto.LoginUserInputDTO{
 		Email:    testUser.Email,
-		Password: "secret", //'secret' was used as the test password while seeding
+		Password: "Secret12345!", //'secret' was used as the test password while seeding
 	})
 	assert.Nil(s.T(), err)
 
@@ -412,7 +413,7 @@ func (s *ServerIntegrationTestSuite) TestAPIKey_FindUserAPIKeys() {
 	testUser, err := testdb.SeedUser(s.DbConn.Client, s.Cfg)
 	assert.Nil(s.T(), err)
 
-	_, key, err := testdb.SeedAPIKey(s.DbConn.Client, s.Cfg, testUser.ID)
+	_, key, err := testdb.SeedAPIKey(s.DbConn.Client, s.Cfg, testUser.ID, models.APIKEY_PERMISSIONS)
 	assert.Nil(s.T(), err)
 
 	// construct the endpoint
@@ -441,7 +442,7 @@ func (s *ServerIntegrationTestSuite) TestAPIKey_UpdateAPIKey() {
 	testUser, err := testdb.SeedUser(s.DbConn.Client, s.Cfg)
 	assert.Nil(s.T(), err)
 
-	testAPIKey, key, err := testdb.SeedAPIKey(s.DbConn.Client, s.Cfg, testUser.ID)
+	testAPIKey, key, err := testdb.SeedAPIKey(s.DbConn.Client, s.Cfg, testUser.ID, models.APIKEY_PERMISSIONS)
 	assert.Nil(s.T(), err)
 
 	// construct the endpoint
@@ -479,7 +480,7 @@ func (s *ServerIntegrationTestSuite) TestAPIKey_Delete() {
 	testUser, err := testdb.SeedUser(s.DbConn.Client, s.Cfg)
 	assert.Nil(s.T(), err)
 
-	testAPIKey, key, err := testdb.SeedAPIKey(s.DbConn.Client, s.Cfg, testUser.ID)
+	testAPIKey, key, err := testdb.SeedAPIKey(s.DbConn.Client, s.Cfg, testUser.ID, models.APIKEY_PERMISSIONS)
 	assert.Nil(s.T(), err)
 
 	// construct the endpoint
@@ -509,7 +510,7 @@ func (s *ServerIntegrationTestSuite) TestAPIKey_Revoke() {
 	testUser, err := testdb.SeedUser(s.DbConn.Client, s.Cfg)
 	assert.Nil(s.T(), err)
 
-	testAPIKey, key, err := testdb.SeedAPIKey(s.DbConn.Client, s.Cfg, testUser.ID)
+	testAPIKey, key, err := testdb.SeedAPIKey(s.DbConn.Client, s.Cfg, testUser.ID, models.APIKEY_PERMISSIONS)
 	assert.Nil(s.T(), err)
 
 	// construct the endpoint
@@ -539,7 +540,7 @@ func (s *ServerIntegrationTestSuite) TestBucket_Create() {
 	testUser, err := testdb.SeedUser(s.DbConn.Client, s.Cfg)
 	assert.Nil(s.T(), err)
 
-	_, key, err := testdb.SeedAPIKey(s.DbConn.Client, s.Cfg, testUser.ID)
+	_, key, err := testdb.SeedAPIKey(s.DbConn.Client, s.Cfg, testUser.ID, models.APIKEY_PERMISSIONS)
 	assert.Nil(s.T(), err)
 
 	// construct the endpoint
@@ -571,11 +572,11 @@ func (s *ServerIntegrationTestSuite) TestBucket_FindBucketByUID() {
 	assert.Nil(s.T(), err)
 
 	// seed api key for authorization
-	_, key, err := testdb.SeedAPIKey(s.DbConn.Client, s.Cfg, testUser.ID)
+	_, key, err := testdb.SeedAPIKey(s.DbConn.Client, s.Cfg, testUser.ID, models.APIKEY_PERMISSIONS)
 	assert.Nil(s.T(), err)
 
 	// seed a new bucket
-	testBucket, err := testdb.SeedBucket(s.DbConn.Client, s.Cfg, testUser.ID)
+	testBucket, err := testdb.SeedBucket(s.DbConn.Client, s.Cfg, testUser.ID, models.BUCKET_PERMISSIONS)
 	assert.Nil(s.T(), err)
 
 	// construct the endpoint
@@ -614,11 +615,11 @@ func (s *ServerIntegrationTestSuite) TestBucket_Update() {
 	assert.Nil(s.T(), err)
 
 	// seed api key for authorization
-	_, key, err := testdb.SeedAPIKey(s.DbConn.Client, s.Cfg, testUser.ID)
+	_, key, err := testdb.SeedAPIKey(s.DbConn.Client, s.Cfg, testUser.ID, models.APIKEY_PERMISSIONS)
 	assert.Nil(s.T(), err)
 
 	// seed a new bucket
-	testBucket, err := testdb.SeedBucket(s.DbConn.Client, s.Cfg, testUser.ID)
+	testBucket, err := testdb.SeedBucket(s.DbConn.Client, s.Cfg, testUser.ID, models.BUCKET_PERMISSIONS)
 	assert.Nil(s.T(), err)
 
 	// construct the endpoint
@@ -655,11 +656,11 @@ func (s *ServerIntegrationTestSuite) TestBucket_Delete() {
 	assert.Nil(s.T(), err)
 
 	// seed api key for authorization
-	_, key, err := testdb.SeedAPIKey(s.DbConn.Client, s.Cfg, testUser.ID)
+	_, key, err := testdb.SeedAPIKey(s.DbConn.Client, s.Cfg, testUser.ID, models.APIKEY_PERMISSIONS)
 	assert.Nil(s.T(), err)
 
 	// seed a new bucket
-	testBucket, err := testdb.SeedBucket(s.DbConn.Client, s.Cfg, testUser.ID)
+	testBucket, err := testdb.SeedBucket(s.DbConn.Client, s.Cfg, testUser.ID, models.BUCKET_PERMISSIONS)
 	assert.Nil(s.T(), err)
 
 	// construct the endpoint
@@ -685,11 +686,11 @@ func (s *ServerIntegrationTestSuite) TestBucket_ListUserBuckets() {
 	assert.Nil(s.T(), err)
 
 	// seed api key for authorization
-	_, key, err := testdb.SeedAPIKey(s.DbConn.Client, s.Cfg, testUser.ID)
+	_, key, err := testdb.SeedAPIKey(s.DbConn.Client, s.Cfg, testUser.ID, models.APIKEY_PERMISSIONS)
 	assert.Nil(s.T(), err)
 
 	// seed a new bucket
-	testBucket, err := testdb.SeedBucket(s.DbConn.Client, s.Cfg, testUser.ID)
+	testBucket, err := testdb.SeedBucket(s.DbConn.Client, s.Cfg, testUser.ID, models.BUCKET_PERMISSIONS)
 	assert.Nil(s.T(), err)
 
 	// construct the endpoint
@@ -727,11 +728,11 @@ func (s *ServerIntegrationTestSuite) TestBucketItem_Create() {
 	assert.Nil(s.T(), err)
 
 	// seed api key for authorization
-	_, key, err := testdb.SeedAPIKey(s.DbConn.Client, s.Cfg, testUser.ID)
+	_, key, err := testdb.SeedAPIKey(s.DbConn.Client, s.Cfg, testUser.ID, models.APIKEY_PERMISSIONS)
 	assert.Nil(s.T(), err)
 
 	// seed a new bucket
-	testBucket, err := testdb.SeedBucket(s.DbConn.Client, s.Cfg, testUser.ID)
+	testBucket, err := testdb.SeedBucket(s.DbConn.Client, s.Cfg, testUser.ID, models.BUCKET_PERMISSIONS)
 	assert.Nil(s.T(), err)
 
 	// construct the endpoint
@@ -763,11 +764,11 @@ func (s *ServerIntegrationTestSuite) TestBucketItem_ListBucketItems() {
 	assert.Nil(s.T(), err)
 
 	// seed api key for authorization
-	_, key, err := testdb.SeedAPIKey(s.DbConn.Client, s.Cfg, testUser.ID)
+	_, key, err := testdb.SeedAPIKey(s.DbConn.Client, s.Cfg, testUser.ID, models.APIKEY_PERMISSIONS)
 	assert.Nil(s.T(), err)
 
 	// seed a new bucket
-	testBucket, err := testdb.SeedBucket(s.DbConn.Client, s.Cfg, testUser.ID)
+	testBucket, err := testdb.SeedBucket(s.DbConn.Client, s.Cfg, testUser.ID, models.BUCKET_PERMISSIONS)
 	assert.Nil(s.T(), err)
 
 	// seed a new bucket item
@@ -816,11 +817,11 @@ func (s *ServerIntegrationTestSuite) TestBucketItem_FindByKeyName() {
 	assert.Nil(s.T(), err)
 
 	// seed api key for authorization
-	_, key, err := testdb.SeedAPIKey(s.DbConn.Client, s.Cfg, testUser.ID)
+	_, key, err := testdb.SeedAPIKey(s.DbConn.Client, s.Cfg, testUser.ID, models.APIKEY_PERMISSIONS)
 	assert.Nil(s.T(), err)
 
 	// seed a new bucket
-	testBucket, err := testdb.SeedBucket(s.DbConn.Client, s.Cfg, testUser.ID)
+	testBucket, err := testdb.SeedBucket(s.DbConn.Client, s.Cfg, testUser.ID, models.BUCKET_PERMISSIONS)
 	assert.Nil(s.T(), err)
 
 	// seed a new bucket item
@@ -834,7 +835,7 @@ func (s *ServerIntegrationTestSuite) TestBucketItem_FindByKeyName() {
 
 	// construct the endpoint
 	// arrange
-	url := fmt.Sprintf("%s/item/%s/%s", BASE_URL, testBucket.UID, testBucketItem.Key)
+	url := fmt.Sprintf("%s/item/%s/%s?full=true", BASE_URL, testBucket.UID, testBucketItem.Key)
 
 	request, err := http.NewRequest(http.MethodGet, url, nil)
 	assert.Nil(s.T(), err)
@@ -856,7 +857,7 @@ func (s *ServerIntegrationTestSuite) TestBucketItem_FindByKeyName() {
 
 	// serialize bucket data
 	var bucketItem models.BucketItem
-	err = serializeMap(response.Data.(interface{}), &bucketItem)
+	err = serializeMap(response.Data, &bucketItem)
 	assert.Nil(s.T(), err)
 	assert.Equal(s.T(), bucketItem.ID.Hex(), testBucketItem.ID.Hex())
 }
@@ -867,11 +868,11 @@ func (s *ServerIntegrationTestSuite) TestBucketItem_UpdateByKeyName() {
 	assert.Nil(s.T(), err)
 
 	// seed api key for authorization
-	_, key, err := testdb.SeedAPIKey(s.DbConn.Client, s.Cfg, testUser.ID)
+	_, key, err := testdb.SeedAPIKey(s.DbConn.Client, s.Cfg, testUser.ID, models.APIKEY_PERMISSIONS)
 	assert.Nil(s.T(), err)
 
 	// seed a new bucket
-	testBucket, err := testdb.SeedBucket(s.DbConn.Client, s.Cfg, testUser.ID)
+	testBucket, err := testdb.SeedBucket(s.DbConn.Client, s.Cfg, testUser.ID, models.BUCKET_PERMISSIONS)
 	assert.Nil(s.T(), err)
 
 	// seed a new bucket item
@@ -905,17 +906,55 @@ func (s *ServerIntegrationTestSuite) TestBucketItem_UpdateByKeyName() {
 	assert.Equal(s.T(), http.StatusOK, recorder.Code)
 }
 
+// Test 'bucket item atomic operations' i.e. increment or decrement
+func (s *ServerIntegrationTestSuite) TestBucketItem_IncrementOperation() {
+	testUser, err := testdb.SeedUser(s.DbConn.Client, s.Cfg)
+	assert.Nil(s.T(), err)
+
+	// seed api key for authorization
+	_, key, err := testdb.SeedAPIKey(s.DbConn.Client, s.Cfg, testUser.ID, models.APIKEY_PERMISSIONS)
+	assert.Nil(s.T(), err)
+
+	// seed a new bucket
+	testBucket, err := testdb.SeedBucket(s.DbConn.Client, s.Cfg, testUser.ID, models.BUCKET_PERMISSIONS)
+	assert.Nil(s.T(), err)
+
+	// seed a new bucket item
+	testBucketItem, err := testdb.SeedBucketItem(
+		s.DbConn.Client,
+		s.Cfg, testUser.ID,
+		testBucket.ID,
+		testBucket.UID, 20,
+	)
+	assert.Nil(s.T(), err)
+
+	// construct the endpoint
+	// arrange
+	url := fmt.Sprintf("%s/item/%s/%s", BASE_URL, testBucket.UID, testBucketItem.Key)
+
+	request, err := http.NewRequest(http.MethodPut, url, strings.NewReader("+5"))
+	assert.Nil(s.T(), err)
+	request.Header.Add("Authorization", fmt.Sprintf("Bearer %s", key))
+
+	// act: test bucket item increment operation
+	// send request and record response
+	recorder := httptest.NewRecorder()
+	s.Server.Server.ServeHTTP(recorder, request)
+	// assert
+	assert.Equal(s.T(), http.StatusOK, recorder.Code)
+}
+
 // Test 'delete bucket item by keyname'
 func (s *ServerIntegrationTestSuite) TestBucketItem_DeleteByKeyName() {
 	testUser, err := testdb.SeedUser(s.DbConn.Client, s.Cfg)
 	assert.Nil(s.T(), err)
 
 	// seed api key for authorization
-	_, key, err := testdb.SeedAPIKey(s.DbConn.Client, s.Cfg, testUser.ID)
+	_, key, err := testdb.SeedAPIKey(s.DbConn.Client, s.Cfg, testUser.ID, models.APIKEY_PERMISSIONS)
 	assert.Nil(s.T(), err)
 
 	// seed a new bucket
-	testBucket, err := testdb.SeedBucket(s.DbConn.Client, s.Cfg, testUser.ID)
+	testBucket, err := testdb.SeedBucket(s.DbConn.Client, s.Cfg, testUser.ID, models.BUCKET_PERMISSIONS)
 	assert.Nil(s.T(), err)
 
 	// seed a new bucket item

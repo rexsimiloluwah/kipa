@@ -2,30 +2,33 @@
   <div>
     <div class="w-full">
       <div class="text-center mb-6">
-        <h1 class="text-2xl font-bold">Sign Up</h1>
+        <h1 class="text-2xl font-bold">
+          Sign Up
+        </h1>
         <p>Create a New Account</p>
       </div>
-      <form class="flex flex-col space-y-3" @submit.prevent="handleSignup">
+      <form
+        class="flex flex-col space-y-3"
+        @submit.prevent="handleSignup"
+      >
         <FormRow>
           <div>
             <div class="relative">
-              <label for="name"
-                >Firstname<span class="text-red-600">*</span></label
-              >
+              <label for="firstname">Firstname<span class="text-red-600">*</span></label>
               <input
+                id="firstname"
+                v-model="formState.firstname"
                 type="text"
                 name="firstname"
-                id="firstname"
-                v-on:blur="handleBlur('firstname')"
-                v-model="formState.firstname"
                 placeholder="Enter Firstname"
                 :class="`${v$.firstname.$errors.length && 'input--error'}`"
-              />
+                @blur="handleBlur('firstname')"
+              >
             </div>
             <div
-              class="input-errors"
               v-for="error of v$.firstname.$errors"
               :key="error.$uid"
+              class="input-errors"
             >
               <p class="text-red-600">
                 {{ parseErrorMessage(String(error.$message), "Firstname") }}
@@ -35,23 +38,21 @@
 
           <div>
             <div class="relative">
-              <label for="name"
-                >Lastname<span class="text-red-600">*</span></label
-              >
+              <label for="lastname">Lastname<span class="text-red-600">*</span></label>
               <input
+                id="lastname"
+                v-model="formState.lastname"
                 type="text"
                 name="lastname"
-                id="lastname"
-                v-on:blur="handleBlur('lastname')"
-                v-model="formState.lastname"
                 placeholder="Enter Lastname"
                 :class="`${v$.lastname.$errors.length && 'input--error'}`"
-              />
+                @blur="handleBlur('lastname')"
+              >
             </div>
             <div
-              class="input-errors"
               v-for="error of v$.lastname.$errors"
               :key="error.$uid"
+              class="input-errors"
             >
               <p class="text-red-600">
                 {{ parseErrorMessage(String(error.$message), "Lastname") }}
@@ -61,21 +62,21 @@
         </FormRow>
         <div>
           <div class="relative">
-            <label for="name">Email<span class="text-red-600">*</span></label>
+            <label for="email">Email<span class="text-red-600">*</span></label>
             <input
+              id="email"
+              v-model="formState.email"
               type="text"
               name="email"
-              id="email"
-              v-on:blur="handleBlur('email')"
-              v-model="formState.email"
               placeholder="Enter Email"
               :class="`${v$.email.$errors.length && 'input--error'}`"
-            />
+              @blur="handleBlur('email')"
+            >
           </div>
           <div
-            class="input-errors"
             v-for="error of v$.email.$errors"
             :key="error.$uid"
+            class="input-errors"
           >
             <p class="text-red-600">
               {{ parseErrorMessage(String(error.$message), "Email") }}
@@ -85,28 +86,26 @@
 
         <div>
           <div class="relative">
-            <label for="name"
-              >Password<span class="text-red-600">*</span></label
-            >
+            <label for="password">Password<span class="text-red-600">*</span></label>
             <input
-              :type="showPassword ? 'text' : 'password'"
-              name="password"
               id="password"
               v-model="formState.password"
-              v-on:blur="handleBlur('password')"
+              :type="showPassword ? 'text' : 'password'"
+              name="password"
               placeholder="Enter Password"
               :class="`${v$.password.$errors.length && 'input--error'}`"
-            />
+              @blur="handleBlur('password')"
+            >
             <font-awesome-icon
-              :icon="showPassword ? 'eye-slash' : 'eye'"
+              :icon="showPassword ? 'eye' : 'eye-slash'"
               class="absolute top-10 right-4 text-gray-700 cursor-pointer"
               @click="toggleShowPassword"
             />
           </div>
           <div
-            class="input-errors"
             v-for="error of v$.password.$errors"
             :key="error.$uid"
+            class="input-errors"
           >
             <p class="text-red-600">
               {{ parseErrorMessage(String(error.$message), "Password") }}
@@ -115,11 +114,13 @@
         </div>
 
         <div class="flex justify-between items-center pb-4">
-          <span></span>
-          <router-link to="/login">Already registered? Log In</router-link>
+          <span />
+          <router-link to="/login">
+            Already registered? Log In
+          </router-link>
         </div>
 
-        <Button
+        <CustomButton
           title="Sign Up"
           type="submit"
           :disabled="v$.$invalid"
@@ -134,13 +135,13 @@
 import { defineComponent, reactive, ref } from "vue";
 import { required, email, minLength } from "@vuelidate/validators";
 import { useVuelidate } from "@vuelidate/core";
-import { Button, FormRow, FormInput } from "./shared";
+import { CustomButton, FormRow } from "./shared";
 import { useUserStore } from "../store/user";
 import { parseErrorMessage } from "../common/utils/form";
 
 export default defineComponent({
   name: "SignupForm",
-  components: { Button, FormInput, FormRow },
+  components: { CustomButton, FormRow },
   setup() {
     const userStore = useUserStore();
     const isLoading = ref<boolean>(false);
@@ -171,13 +172,15 @@ export default defineComponent({
 
     const handleSignup = async () => {
       isLoading.value = true;
-      await userStore.registerUser(formState).then(() => {
-        isLoading.value = false;
-      });
+      await userStore
+        .registerUser({ ...formState, username: "theblackdove" })
+        .then(() => {
+          isLoading.value = false;
+        });
     };
 
     // show password control
-    const showPassword = ref<Boolean>(false);
+    const showPassword = ref<boolean>(false);
     const toggleShowPassword = () => {
       showPassword.value = !showPassword.value;
     };

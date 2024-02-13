@@ -16,7 +16,7 @@ export const useUserStore = defineStore("user", {
     async fetchUser() {
       try {
         const user = await AuthService.getAuthUser();
-        this.user = user;
+        this.user = user as User;
       } catch {
         this.user = null;
       }
@@ -44,6 +44,18 @@ export const useUserStore = defineStore("user", {
         toast.error(error.error || error.message);
       }
     },
+
+    async logoutUser() {
+      try {
+        await AuthService.logout();
+        toast.success("Log out sucessful!");
+        this.user = null; //clear the user state
+        router.push("/");
+      } catch (error: any) {
+        toast.error(error.error || error.message);
+      }
+    },
+
     async updateUser(data: UpdateUserData) {
       try {
         await UserService.updateUser(data);

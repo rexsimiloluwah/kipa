@@ -22,6 +22,7 @@ var (
 	ErrDeletingBucket      = errors.New("error deleting bucket")
 	ErrBucketItemsNotFound = errors.New("bucket items not found")
 	ErrBucketItemNotFound  = errors.New("bucket item not found")
+	ErrBucketItemExpired   = errors.New("bucket item has expired")
 	ErrUpdatingBucketItem  = errors.New("error updating bucket item")
 	ErrDeletingBucketItem  = errors.New("error deleting bucket item")
 	ErrDeletingBucketItems = errors.New("error deleting bucket items")

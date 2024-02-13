@@ -17,9 +17,11 @@ import (
 type IJwtService interface {
 	GenerateToken(payload map[string]interface{}, expiresIn string, secret string) (string, error)
 	ValidateToken(tokenString string) (*jwt.Token, error)
-	DecodeToken(tokenString string) (*JwtCustomClaims, error)
+	DecodeToken(tokenString string, secret string) (*JwtCustomClaims, error)
 	GenerateAccessToken(payload map[string]interface{}) (string, error)
 	GenerateRefreshToken(payload map[string]interface{}) (string, error)
+	GenerateEmailVerificationToken(payload map[string]interface{}) (string, error)
+	GenerateResetPasswordToken(payload map[string]interface{}) (string, error)
 	Authenticate(credential *auth.Credential) (*auth.AuthResponse, error)
 }
 
@@ -30,24 +32,24 @@ type JwtCustomClaims struct {
 }
 
 type JwtService struct {
-	Cfg            *config.Config
-	Issuer         string
-	UserRepository repository.IUserRepository
+	cfg      *config.Config
+	issuer   string
+	userRepo repository.IUserRepository
 }
 
 var (
 	ErrInvalidExpiresIn = errors.New("invalid expires in duration")
 )
 
-func NewJwtService(cfg *config.Config, userRepository repository.IUserRepository) IJwtService {
+func NewJwtService(cfg *config.Config, userRepo repository.IUserRepository) *JwtService {
 	return &JwtService{
-		Cfg:            cfg,
-		Issuer:         "rexsimiloluwa@gmail.com",
-		UserRepository: userRepository,
+		cfg:      cfg,
+		issuer:   "rexsimiloluwa@gmail.com",
+		userRepo: userRepo,
 	}
 }
 
-// Parses the expires in string (i.e. 7d, 24h, 60m etc.) to a Unix time format
+// Parses the expiry duration string (i.e. 7d, 24h, 60m etc.) to a Unix time format
 func parseExpiresInTime(expiresInStr string) (int64, error) {
 	durationStr := expiresInStr[:len(expiresInStr)-1]
 	durationType := expiresInStr[len(expiresInStr)-1]
@@ -64,12 +66,16 @@ func parseExpiresInTime(expiresInStr string) (int64, error) {
 		result = time.Now().Add(time.Minute * time.Duration(durationNum)).Unix()
 	case 'd':
 		result = time.Now().Add(24 * time.Hour * time.Duration(durationNum)).Unix()
+	case 'y':
+		result = time.Now().Add(365 * 24 * time.Hour * time.Duration(durationNum)).Unix()
 	default:
 		return 0, errors.New("could not decode expires in")
 	}
 	return result, nil
 }
 
+// Generate a token
+// Accepts the payload, expiry duration, and JWT secret key for the token.
 func (jwtSrv *JwtService) GenerateToken(payload map[string]interface{}, expiresIn string, secret string) (string, error) {
 	// parse the expires in string
 	expiresInUnix, err := parseExpiresInTime(expiresIn)
@@ -82,7 +88,7 @@ func (jwtSrv *JwtService) GenerateToken(payload map[string]interface{}, expiresI
 		payload,
 		jwt.StandardClaims{
 			ExpiresAt: expiresInUnix,
-			Issuer:    jwtSrv.Issuer,
+			Issuer:    jwtSrv.issuer,
 			IssuedAt:  time.Now().Unix(),
 		},
 	}
@@ -101,14 +107,44 @@ func (jwtSrv *JwtService) GenerateToken(payload map[string]interface{}, expiresI
 	return encodedToken, nil
 }
 
+// Generate a new access token
 func (jwtSrv *JwtService) GenerateAccessToken(payload map[string]interface{}) (string, error) {
-	return jwtSrv.GenerateToken(payload, jwtSrv.Cfg.AccessTokenJwtExpiresIn, jwtSrv.Cfg.JwtSecretKey)
+	return jwtSrv.GenerateToken(
+		payload,
+		jwtSrv.cfg.AccessTokenJwtExpiresIn,
+		jwtSrv.cfg.JwtSecretKey,
+	)
 }
 
+// Generate a new refresh token
 func (jwtSrv *JwtService) GenerateRefreshToken(payload map[string]interface{}) (string, error) {
-	return jwtSrv.GenerateToken(payload, jwtSrv.Cfg.RefreshTokenJwtExpiresIn, jwtSrv.Cfg.JwtSecretKey)
+	return jwtSrv.GenerateToken(
+		payload,
+		jwtSrv.cfg.RefreshTokenJwtExpiresIn,
+		jwtSrv.cfg.JwtSecretKey,
+	)
 }
 
+// Generate a new email verification token
+func (jwtSrv *JwtService) GenerateEmailVerificationToken(payload map[string]interface{}) (string, error) {
+	return jwtSrv.GenerateToken(
+		payload,
+		jwtSrv.cfg.EmailVerificationTokenExpiresIn,
+		jwtSrv.cfg.EmailVerificationTokenSecretKey,
+	)
+}
+
+// Generate a new reset password token
+func (jwtSrv *JwtService) GenerateResetPasswordToken(payload map[string]interface{}) (string, error) {
+	return jwtSrv.GenerateToken(
+		payload,
+		jwtSrv.cfg.ResetPasswordTokenExpiresIn,
+		jwtSrv.cfg.ResetPasswordTokenSecretKey,
+	)
+}
+
+// Check if a token is valid
+// Accepts the string value of the token
 func (jwtSrv *JwtService) ValidateToken(tokenString string) (*jwt.Token, error) {
 	return jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		// Signing method validation
@@ -117,13 +153,15 @@ func (jwtSrv *JwtService) ValidateToken(tokenString string) (*jwt.Token, error) 
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 		// Return the secret signing key if otherwise
-		return []byte(jwtSrv.Cfg.JwtSecretKey), nil
+		return []byte(jwtSrv.cfg.JwtSecretKey), nil
 	})
 }
 
-func (jwtSrv *JwtService) DecodeToken(tokenString string) (*JwtCustomClaims, error) {
+// Decode a token, returns the JWT claims
+// Accepts the string value of the token
+func (jwtSrv *JwtService) DecodeToken(tokenString string, secret string) (*JwtCustomClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &JwtCustomClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte(jwtSrv.Cfg.JwtSecretKey), nil
+		return []byte(secret), nil
 	})
 
 	if err != nil {
@@ -138,20 +176,20 @@ func (jwtSrv *JwtService) DecodeToken(tokenString string) (*JwtCustomClaims, err
 	return claims, nil
 }
 
+// Authenticate a token, for use in the Auth chain.
 func (jwtSrv *JwtService) Authenticate(credential *auth.Credential) (*auth.AuthResponse, error) {
 	if credential.Type != auth.CredentialTypeJWT && credential.Type != auth.CredentialTypeRefreshJWT {
 		return nil, errors.New("credential must be of jwt type")
 	}
-
 	tokenString := credential.JWT
 
-	claims, err := jwtSrv.DecodeToken(tokenString)
+	claims, err := jwtSrv.DecodeToken(tokenString, jwtSrv.cfg.JwtSecretKey)
 	if err != nil {
 		return nil, err
 	}
 
 	userID := claims.Payload["id"]
-	user, err := jwtSrv.UserRepository.FindUserById(userID.(string))
+	user, err := jwtSrv.userRepo.FindUserById(userID.(string))
 
 	if err != nil {
 		return nil, err

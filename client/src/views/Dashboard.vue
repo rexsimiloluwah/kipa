@@ -7,7 +7,7 @@
       <LeftSidebar />
     </div>
     <section class="hidden md:block flex-grow overflow-y-scroll relative p-12">
-      <router-view></router-view>
+      <router-view />
     </section>
   </main>
 </template>
@@ -18,6 +18,7 @@ import LeftSidebar from "../components/Dashboard/LeftSidebar.vue";
 import { useBucketStore } from "../store/bucket";
 
 export default defineComponent({
+  components: { LeftSidebar },
   setup() {
     const bucketStore = useBucketStore();
 
@@ -26,6 +27,5 @@ export default defineComponent({
       await bucketStore.fetchBuckets();
     });
   },
-  components: { LeftSidebar },
 });
 </script>

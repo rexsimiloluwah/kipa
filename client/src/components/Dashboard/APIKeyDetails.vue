@@ -7,13 +7,22 @@
       <Divider />
     </div>
     <div class="space-x-3">
-      <button class="bg-orange-400 rounded-lg p-1" v-if="apiKey.revoked">
+      <button
+        v-if="apiKey.revoked"
+        class="bg-orange-400 rounded-lg p-1"
+      >
         status:revoked
       </button>
-      <button class="bg-red-400 rounded-lg p-1" v-if="isAPIKeyExpired">
+      <button
+        v-if="isAPIKeyExpired"
+        class="bg-red-400 rounded-lg p-1"
+      >
         status:expired
       </button>
-      <button class="bg-green-400 rounded-lg p-1" v-if="isAPIKeyActive">
+      <button
+        v-if="isAPIKeyActive"
+        class="bg-green-400 rounded-lg p-1"
+      >
         status:active
       </button>
     </div>
@@ -35,8 +44,8 @@
           title="Revoke API Key"
           type="button"
           class="bg-red-500"
-          @click="handleRevokeAPIKey"
           :loading="isRevoking"
+          @click="handleRevokeAPIKey"
         />
       </div>
     </div>

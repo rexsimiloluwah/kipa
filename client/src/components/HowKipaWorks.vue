@@ -2,7 +2,9 @@
   <section class="bg-green-50">
     <Container>
       <div class="text-center space-y-4">
-        <h1 class="text-4xl font-bold text-primarygreen">How Kipa Works</h1>
+        <h1 class="text-4xl font-bold text-primarygreen">
+          How Kipa Works
+        </h1>
         <p>Create API Key — Create Bucket — 'Kip' anything!</p>
       </div>
       <div class="my-5">
@@ -12,44 +14,25 @@
               src="/images/guide_img.svg"
               alt="Hero Image"
               class="object-contain h-72 w-full sm:h-80 xl:h-112 2xl:h-128"
-            />
+            >
           </div>
           <ul
-            class="
-              bg-white
-              rounded-md
-              border-[1px] border-gray-700
-              w-full
-              md:w-[90%]
-              flex flex-col
-              justify-center
-              m-auto
-              divide-y-[1px] divide-gray-700
-              overflow-hidden
-              relative
-            "
+            class="bg-white rounded-md border-[1px] border-gray-700 w-full md:w-[90%] flex flex-col justify-center m-auto divide-y-[1px] divide-gray-700 overflow-hidden relative"
           >
             <li
-              class="flex py-4 px-3 hover:bg-green-50"
               v-for="guide in guides"
               :key="guides.indexOf(guide)"
+              class="flex py-4 px-3 hover:bg-green-50"
             >
               <div
-                class="
-                  w-12
-                  h-12
-                  bg-primarygreen
-                  rounded-full
-                  text-2xl
-                  flex
-                  justify-center
-                  items-center
-                "
+                class="w-12 h-12 bg-primarygreen rounded-full text-2xl flex justify-center items-center"
               >
                 {{ guides.indexOf(guide) + 1 }}
               </div>
               <div class="ml-3 flex-1 overflow-hidden flex-grow">
-                <h1 class="font-semibold">{{ guide.title }}</h1>
+                <h1 class="font-semibold">
+                  {{ guide.title }}
+                </h1>
                 <p class="text-sm">
                   {{ guide.description }}
                 </p>
@@ -96,5 +79,4 @@ export default defineComponent({
 });
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>

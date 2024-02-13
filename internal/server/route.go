@@ -1,19 +1,5 @@
 package server
 
-import (
-	"keeper/internal/models"
-	"net/http"
-
-	"github.com/labstack/echo/v4"
-)
-
-// Health check routes
-func InitHealthCheckRoute(s *Server) {
-	s.Server.GET("/healthcheck", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Server is healthy!")
-	})
-}
-
 // User authentication routes (login,register,fetch authenticated user,refresh token, forgot password etc.)
 func InitAuthRoutes(s *Server) {
 	authRoutes := s.Server.Group("api/v1/auth")
@@ -25,6 +11,8 @@ func InitAuthRoutes(s *Server) {
 	authRoutes.POST("/refresh-token", s.Handler.AuthHandler.RefreshToken, s.Middlewares.RequireRefreshToken)
 	authRoutes.POST("/register", s.Handler.AuthHandler.Register)
 	authRoutes.POST("/login", s.Handler.AuthHandler.Login)
+	authRoutes.POST("/forgot-password", s.Handler.AuthHandler.ForgotPassword)
+	authRoutes.POST("/reset-password", s.Handler.AuthHandler.ResetPassword)
 }
 
 // User account management routes
@@ -100,8 +88,12 @@ func InitBucketRoutes(s *Server) {
 	protectedBucketsRoutes := bucketsRoutes.Group("")
 	{
 		protectedBucketsRoutes.Use(s.Middlewares.RequireAuth)
-		protectedBucketsRoutes.GET("",
+		protectedBucketsRoutes.GET("/all",
 			s.Handler.BucketHandler.ListUserBuckets,
+			s.Middlewares.RequireAPIKeyBucketReadPermission,
+		)
+		protectedBucketsRoutes.GET("",
+			s.Handler.BucketHandler.ListUserBucketsPaged,
 			s.Middlewares.RequireAPIKeyBucketReadPermission,
 		)
 	}
@@ -138,8 +130,13 @@ func InitBucketItemRoutes(s *Server) {
 	protectedBucketItemsRoutes := bucketItemsRoutes.Group("")
 	{
 		protectedBucketItemsRoutes.Use(s.Middlewares.RequireAuth)
+		protectedBucketItemsRoutes.GET("",
+			s.Handler.BucketItemHandler.ListBucketItemsPaged,
+			s.Middlewares.RequireBucketItemReadAccess,
+			s.Middlewares.RequireAPIKeyReadItemPermission,
+		)
 		protectedBucketItemsRoutes.GET("/:bucketUID",
-			s.Handler.BucketItemHandler.ListBucketItems,
+			s.Handler.BucketItemHandler.ListBucketItemsByBucketUID,
 			s.Middlewares.RequireBucketItemReadAccess,
 			s.Middlewares.RequireAPIKeyReadItemPermission,
 		)
@@ -149,12 +146,10 @@ func InitBucketItemRoutes(s *Server) {
 // Public/Miscellaneous routes
 func InitPublicRoutes(s *Server) {
 	publicRoutes := s.Server.Group("/api/v1/public")
+	// healthcheck
+	publicRoutes.GET("/healthcheck", s.Handler.PublicRoutesHandler.HealthCheck)
 	// returns an array of api key permissions
-	publicRoutes.GET("/apikey-permissions", func(c echo.Context) error {
-		return c.JSON(http.StatusOK, models.APIKeyPermissions)
-	})
+	publicRoutes.GET("/apikey-permissions", s.Handler.PublicRoutesHandler.GetAPIKeyPermissionsList)
 	// returns an array of bucket-level permissions
-	publicRoutes.GET("/bucket-permissions", func(c echo.Context) error {
-		return c.JSON(http.StatusOK, models.BucketPermissions)
-	})
+	publicRoutes.GET("/bucket-permissions", s.Handler.PublicRoutesHandler.GetBucketPermissionsList)
 }

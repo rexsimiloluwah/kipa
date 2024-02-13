@@ -21,7 +21,7 @@ var (
 	APIKeyPermissionReadItem           = APIKeyPermission("read:item")
 	APIKeyPermissionWriteItem          = APIKeyPermission("write:item")
 	APIKeyPermissionDeleteItem         = APIKeyPermission("delete:item")
-	BucketPermissions                  = BucketPermissionsList{
+	BUCKET_PERMISSIONS                 = BucketPermissionsList{
 		BucketPermissionPublicWriteItem,
 		BucketPermissionPublicWriteBucket,
 		BucketPermissionPublicDeleteBucket,
@@ -29,7 +29,7 @@ var (
 		BucketPermissionPublicReadItem,
 		BucketPermissionPublicReadBucket,
 	}
-	APIKeyPermissions = APIKeyPermissionsList{
+	APIKEY_PERMISSIONS = APIKeyPermissionsList{
 		APIKeyPermissionReadBucket,
 		APIKeyPermissionWriteBucket,
 		APIKeyPermissionDeleteBucket,

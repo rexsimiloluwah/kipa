@@ -1,10 +1,14 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"keeper/internal/config"
 	"keeper/internal/handlers"
 	"net/http"
+	"os"
+	"os/signal"
+	"time"
 
 	_ "keeper/internal/docs"
 
@@ -68,7 +72,6 @@ func NewServer(cfg *config.Config, dbClient *mongo.Client) *Server {
 }
 
 func (s *Server) RegisterRoutes() {
-	InitHealthCheckRoute(s)
 	InitAuthRoutes(s)
 	InitUserRoutes(s)
 	InitAPIKeyRoutes(s)
@@ -87,5 +90,21 @@ func (s *Server) Start() {
 		PORT = "1323"
 	}
 	s.RegisterRoutes()
-	s.Server.Logger.Fatal(s.Server.Start(fmt.Sprintf(":%s", PORT)))
+
+	go func() {
+		if err := s.Server.Start(fmt.Sprintf(":%s", PORT)); err != nil && err != http.ErrServerClosed {
+			s.Server.Logger.Fatal("shutting down the server")
+		}
+	}()
+
+	// Wait for interrupt signal to gracefully shutdown the server with a timeout of 10 seconds.
+	// Use a buffered channel to avoid missing signals as recommended for signal.Notify
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := s.Server.Shutdown(ctx); err != nil {
+		s.Server.Logger.Fatal(err)
+	}
 }

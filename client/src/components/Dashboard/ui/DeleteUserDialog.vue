@@ -8,20 +8,18 @@
       your account entirely.
     </p>
     <div class="flex flex-col space-y-3">
-      <label for="deleteMessage"
-        >Type:
+      <label for="deleteMessage">Type:
         <span class="font-semibold text-primarygreen">{{
           DELETE_MESSAGE_TEXT
         }}</span>
-        to delete</label
-      >
+        to delete</label>
       <input
+        id="deleteMessage"
+        v-model="deleteMessage"
         type="text"
         name="deleteMessage"
-        id="deleteMessage"
         :placeholder="`Enter '${DELETE_MESSAGE_TEXT}'`"
-        v-model="deleteMessage"
-      />
+      >
       <button
         :class="`simple__btn bg-red-700 ${
           deleteMessage.trim() !== DELETE_MESSAGE_TEXT &&
@@ -30,7 +28,10 @@
         @click="handleDeleteUser"
       >
         <span>Close Account</span>{{ " " }}
-        <font-awesome-icon icon="trash-can" v-if="!isLoading" />
+        <font-awesome-icon
+          v-if="!isLoading"
+          icon="trash-can"
+        />
         <font-awesome-icon
           v-if="isLoading"
           icon="spinner"
@@ -42,16 +43,13 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, reactive, ref } from "vue";
-import Button from "../../shared/Button.vue";
+import { defineComponent, ref } from "vue";
 import { useUserStore } from "../../../store/user";
 
 export default defineComponent({
   name: "DeleteUserDialog",
+  components: {},
   emits: ["closeModal"],
-  components: {
-    Button,
-  },
   setup(props, { emit }) {
     const userStore = useUserStore();
     const DELETE_MESSAGE_TEXT = ref<string>("delete account");

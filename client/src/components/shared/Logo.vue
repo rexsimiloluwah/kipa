@@ -1,7 +1,7 @@
 <template>
   <router-link to="/">
     kipa
-    <span class="bg-primarygreen w-2 h-2 rounded-full inline-block"></span>
+    <span class="bg-primarygreen w-2 h-2 rounded-full inline-block" />
   </router-link>
 </template>
 

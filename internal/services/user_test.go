@@ -16,7 +16,9 @@ import (
 
 // provide user service
 func provideUserService(mockUserRepo *mocks.MockIUserRepository) IUserService {
-	cfg := &config.Config{}
+	cfg := &config.Config{
+		Env: "test",
+	}
 	return NewUserService(cfg, mockUserRepo)
 }
 
@@ -56,7 +58,20 @@ func TestUserService_Register(t *testing.T) {
 				userRepo.EXPECT().FindUserByEmail(gomock.Any()).
 					Times(1).Return(nil, models.ErrUserNotFound)
 			},
-			wantErr: false,
+		},
+		{
+			name: "should_fail_user_already_exists",
+			args: args{
+				data: input,
+			},
+			stubFn: func(userRepo *mocks.MockIUserRepository) {
+				userRepo.EXPECT().FindUserByEmail(gomock.Any()).
+					Times(1).Return(&models.User{
+					ID: primitive.NewObjectID(),
+				}, nil)
+			},
+			wantErr:    true,
+			wantErrMsg: models.ErrUserAlreadyExists.Error(),
 		},
 		{
 			name: "should_fail_register_new_user",
@@ -336,6 +351,10 @@ func TestUserService_UpdateUser(t *testing.T) {
 			require.Nil(t, err)
 		})
 	}
+}
+
+func TestUserService_UpdateUserPassword(t *testing.T) {
+	require.Nil(t, nil)
 }
 
 func TestUserService_DeleteUser(t *testing.T) {

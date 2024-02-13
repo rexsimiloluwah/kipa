@@ -1,8 +1,8 @@
 <template>
   <main>
     <Modal
-      title="Delete Account"
       v-if="showDeleteAccountModal"
+      title="Delete Account"
       @close="showDeleteAccountModal = !showDeleteAccountModal"
     >
       <DeleteUserDialog />
@@ -16,19 +16,21 @@
           <UpdateAccountForm />
           <UpdatePasswordForm />
           <div class="py-3 space-y-3">
-            <h1 class="text-2xl font-bold">Close Account</h1>
+            <h1 class="text-2xl font-bold">
+              Close Account
+            </h1>
             <p>
               NOTE: Closing your account implies deleting all your stored
               buckets, items, API keys, and user account data.
             </p>
-            <Button
+            <CustomButton
               title="Close Account"
               :primary="false"
               class="bg-red-500 hover:bg-red-700 text-white border-none"
               @click="showDeleteAccountModal = true"
             >
               <font-awesome-icon icon="trash-can" />
-            </Button>
+            </CustomButton>
           </div>
         </div>
       </SettingsTabItem>
@@ -48,13 +50,13 @@ import {
   UpdatePasswordForm,
   DeleteUserDialog,
 } from "./ui";
-import { Button, Modal } from "../shared";
+import { CustomButton, Modal } from "../shared";
 
 export default defineComponent({
   name: "UserSettings",
   components: {
     Modal,
-    Button,
+    CustomButton,
     SettingsTabWrapper,
     SettingsTabItem,
     UpdateAccountForm,

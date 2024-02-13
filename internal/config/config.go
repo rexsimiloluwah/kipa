@@ -20,38 +20,62 @@ import (
 // config struct is used to store the loaded environment variables
 
 type Config struct {
-	Port                     string
-	Env                      string
-	JwtSecretKey             string
-	AccessTokenJwtExpiresIn  string
-	RefreshTokenJwtExpiresIn string
-	DbName                   string
-	DbHost                   string
-	DbPort                   string
-	DbUser                   string
-	DbPassword               string
-	MongoDbProdConnUri       string
-	MongoDbTestConnUri       string
+	Port                            string
+	Env                             string
+	JwtSecretKey                    string
+	EmailVerificationTokenSecretKey string
+	ResetPasswordTokenSecretKey     string
+	AccessTokenJwtExpiresIn         string
+	RefreshTokenJwtExpiresIn        string
+	EmailVerificationTokenExpiresIn string
+	ResetPasswordTokenExpiresIn     string
+	DbName                          string
+	DbHost                          string
+	DbPort                          string
+	DbUser                          string
+	DbPassword                      string
+	MongoDbProdConnUri              string
+	MongoDbTestConnUri              string
+	SendgridAPIKey                  string
+	ClientURL                       string
+	RedisHost                       string
+	RedisPort                       string
+	RedisProdUri                    string
+	WithWorkers                     bool
+	EmailSenderName                 string
+	EmailSenderAddr                 string
 }
 
 // New() creates a new Config struct with the loaded environment variables
 func New() *Config {
 	if err := godotenv.Load(); err != nil {
-		logrus.Fatalf("Could not load environment variables.")
+		logrus.Warn("Could not load environment variables.")
 	}
 	return &Config{
-		Port:                     getEnv("PORT", "1323"),
-		Env:                      getEnv("ENV", "development"),
-		JwtSecretKey:             getEnv("JWT_SECRET_KEY", ""),
-		AccessTokenJwtExpiresIn:  getEnv("ACCESS_TOKEN_JWT_EXPIRES_IN", "15m"),
-		RefreshTokenJwtExpiresIn: getEnv("REFRESH_TOKEN_JWT_EXPIRES_IN", "7d"),
-		DbHost:                   getEnv("MONGODB_HOST", ""),
-		DbPort:                   getEnv("MONGODB_PORT", ""),
-		DbUser:                   getEnv("MONGODB_USER", ""),
-		DbPassword:               getEnv("MONGODB_PASSWORD", ""),
-		DbName:                   getEnv("MONGODB_NAME", "keeper"),
-		MongoDbProdConnUri:       getEnv("MONGODB_CONN_URI", ""),
-		MongoDbTestConnUri:       getEnv("MONGODB_TEST_CONN_URI", ""),
+		Port:                            getEnv("PORT", "1323"),
+		Env:                             getEnv("ENV", "development"),
+		JwtSecretKey:                    getEnv("JWT_SECRET_KEY", ""),
+		EmailVerificationTokenSecretKey: getEnv("EMAIL_VERIFICATION_TOKEN_SECRET_KEY", ""),
+		ResetPasswordTokenSecretKey:     getEnv("RESET_PASSWORD_TOKEN_SECRET_KEY", ""),
+		AccessTokenJwtExpiresIn:         getEnv("ACCESS_TOKEN_JWT_EXPIRES_IN", "15m"),
+		RefreshTokenJwtExpiresIn:        getEnv("REFRESH_TOKEN_JWT_EXPIRES_IN", "7d"),
+		EmailVerificationTokenExpiresIn: getEnv("EMAIL_VERIFICATION_TOKEN_EXPIRES_IN", "24h"),
+		ResetPasswordTokenExpiresIn:     getEnv("RESET_PASSWORD_TOKEN_EXPIRES_IN", "7d"),
+		DbHost:                          getEnv("MONGODB_HOST", ""),
+		DbPort:                          getEnv("MONGODB_PORT", ""),
+		DbUser:                          getEnv("MONGODB_USER", ""),
+		DbPassword:                      getEnv("MONGODB_PASSWORD", ""),
+		DbName:                          getEnv("MONGODB_NAME", "keeper"),
+		MongoDbProdConnUri:              getEnv("MONGODB_CONN_URI", ""),
+		MongoDbTestConnUri:              getEnv("MONGODB_TEST_CONN_URI", ""),
+		SendgridAPIKey:                  getEnv("SENDGRID_API_KEY", ""),
+		ClientURL:                       getEnv("CLIENT_URL", ""),
+		RedisHost:                       getEnv("REDIS_HOST", ""),
+		RedisPort:                       getEnv("REDIS_PORT", ""),
+		RedisProdUri:                    getEnv("REDIS_PROD_URI", ""),
+		WithWorkers:                     getEnvAsBool("WITH_WORKERS", true),
+		EmailSenderName:                 getEnv("EMAIL_SENDER_NAME", "kipa"),
+		EmailSenderAddr:                 getEnv("EMAIL_SENDER_ADDR", "rexsimiloluwa@gmail.com"),
 	}
 }
 
@@ -61,13 +85,25 @@ func NewTest() *Config {
 	// 	log.Fatalf("Could not load environment variables.")
 	// }
 	return &Config{
-		Port:                     getEnv("PORT", "1323"),
-		Env:                      getEnv("ENV", "test"),
-		JwtSecretKey:             getEnv("JWT_SECRET_KEY", ""),
-		AccessTokenJwtExpiresIn:  getEnv("ACCESS_TOKEN_JWT_EXPIRES_IN", "15m"),
-		RefreshTokenJwtExpiresIn: getEnv("REFRESH_TOKEN_JWT_EXPIRES_IN", "7d"),
-		DbName:                   getEnv("MONGODB_NAME", "keeper-go-test"),
-		MongoDbTestConnUri:       getEnv("MONGODB_TEST_CONN_URI", ""),
+		Port:                            getEnv("PORT", "1323"),
+		Env:                             getEnv("ENV", "test"),
+		JwtSecretKey:                    getEnv("JWT_SECRET_KEY", ""),
+		EmailVerificationTokenSecretKey: getEnv("EMAIL_VERIFICATION_TOKEN_SECRET_KEY", ""),
+		ResetPasswordTokenSecretKey:     getEnv("RESET_PASSWORD_TOKEN_SECRET_KEY", ""),
+		AccessTokenJwtExpiresIn:         getEnv("ACCESS_TOKEN_JWT_EXPIRES_IN", "15m"),
+		RefreshTokenJwtExpiresIn:        getEnv("REFRESH_TOKEN_JWT_EXPIRES_IN", "7d"),
+		EmailVerificationTokenExpiresIn: getEnv("EMAIL_VERIFICATION_TOKEN_EXPIRES_IN", ""),
+		ResetPasswordTokenExpiresIn:     getEnv("RESET_PASSWORD_TOKEN_EXPIRES_IN", ""),
+		DbHost:                          getEnv("MONGODB_HOST", ""),
+		DbName:                          getEnv("MONGODB_NAME", "keeper-go-test"),
+		DbUser:                          getEnv("MONGODB_USER", ""),
+		DbPort:                          getEnv("MONGODB_PORT", ""),
+		DbPassword:                      getEnv("MONGODB_PASSWORD", ""),
+		MongoDbTestConnUri:              getEnv("MONGODB_TEST_CONN_URI", ""),
+		ClientURL:                       getEnv("CLIENT_URL", ""),
+		RedisHost:                       getEnv("REDIS_HOST", ""),
+		RedisPort:                       getEnv("REDIS_PORT", ""),
+		RedisProdUri:                    getEnv("REDIS_PROD_URI", ""),
 	}
 }
 

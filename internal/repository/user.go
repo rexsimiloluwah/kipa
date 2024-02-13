@@ -103,7 +103,7 @@ func (r *UserRepository) FindAllUsers() ([]models.User, error) {
 	if err = cursor.All(r.ctx, &users); err != nil {
 		return nil, models.ErrUsersNotFound
 	}
-	logrus.Debug("users: ", users)
+	// logrus.Debug("users: ", users)
 	return users, nil
 }
 

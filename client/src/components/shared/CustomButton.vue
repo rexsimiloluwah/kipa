@@ -8,18 +8,18 @@
       hover:opacity-100
       group
       ${
-        primary
-          ? `bg-primarygreen text-white border-[1px] border-black
+      primary
+        ? `bg-primarygreen text-white border-[1px] border-black
       hover:border-2`
-          : `bg-white text-primarygreen  hover:border-black
+        : `bg-white text-primarygreen  hover:border-black
       group
       border-2 border-primarygreen`
-      }
+    }
       ${
-        disabled || loading
-          ? `cursor-not-allowed opacity-50 pointer-events-none`
-          : `cursor-pointer opacity-85`
-      }
+      disabled || loading
+        ? `cursor-not-allowed opacity-50 pointer-events-none`
+        : `cursor-pointer opacity-85`
+    }
     `"
   >
     {{ title }}
@@ -27,15 +27,15 @@
       <font-awesome-icon
         v-if="primary"
         icon="arrow-right"
-        class="
-          transition-all
-          duration-300
-          group-hover:translate-x-2 group-hover:font-semibold
-        "
+        class="transition-all duration-300 group-hover:translate-x-2 group-hover:font-semibold"
       />
       <slot />
     </span>
-    <font-awesome-icon v-if="loading" icon="spinner" class="animate-spin" />
+    <font-awesome-icon
+      v-if="loading"
+      icon="spinner"
+      class="animate-spin"
+    />
   </button>
 </template>
 
@@ -43,7 +43,7 @@
 import { defineComponent, PropType } from "vue";
 
 export default defineComponent({
-  name: "Button",
+  name: "CustomButton",
   props: {
     title: {
       required: true,
@@ -70,6 +70,4 @@ export default defineComponent({
 });
 </script>
 
-<style scoped>
-</style>
-
+<style scoped></style>

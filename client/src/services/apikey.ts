@@ -8,7 +8,7 @@ class APIKeyService {
    * @param data // accepts the API key data
    * @returns
    */
-  createAPIKey(data: CreateAPIKeyData) {
+  createAPIKey(data: CreateAPIKeyData): Promise<APIKey> {
     return new Promise((resolve, reject) => {
       axios
         .post("/api_key", data)
@@ -47,7 +47,7 @@ class APIKeyService {
    */
   getUserAPIKeys(): Promise<Array<APIKey>> {
     return new Promise((resolve, reject) => {
-      const token = TokenService.getLocalAccessToken();
+      const token = TokenService.getAccessTokenCookie();
       const authHeader = { Authorization: `Bearer ${token}` };
       axios
         .get(`/api_keys`, { headers: authHeader })

@@ -1,0 +1,16 @@
+FROM node:14 
+# make the 'app' folder the current working directory 
+WORKDIR /app 
+# copy the package.json and package-lock.json files for the client
+COPY ./client/package*.json ./ 
+# install the project dependencies 
+RUN NODE_ENV=development npm install 
+# copy the projects files and folder ('client' folder) to the current working directory 
+COPY ./client .
+
+EXPOSE 3000
+
+CMD ["npm","run","dev"]
+
+
+

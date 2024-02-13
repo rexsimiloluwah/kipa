@@ -11,7 +11,7 @@ type APIKey struct {
 	Salt        string                `bson:"salt,omitempty" json:"-"`
 	Hash        string                `bson:"hash,omitempty" json:"-"`
 	Revoked     bool                  `bson:"revoked,omitempty" json:"revoked"`
-	Key         string                `bson:"key,omitempty" json:"key,omitempty"`
+	Key         string                `bson:"key,omitempty" json:"-"`
 	KeyType     string                `bson:"key_type,omitempty" json:"key_type"`
 	Role        string                `bson:"role,omitempty" json:"role"`
 	Permissions APIKeyPermissionsList `bson:"permissions,omitempty" json:"permissions"`

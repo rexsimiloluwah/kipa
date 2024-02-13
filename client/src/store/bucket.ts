@@ -1,9 +1,5 @@
 import { defineStore } from "pinia";
-import {
-  Bucket,
-  BucketDetails,
-  CreateBucketData,
-} from "../common/types/bucket";
+import { BucketDetails, CreateBucketData } from "../common/types/bucket";
 import BucketService from "../services/bucket";
 import { useToast } from "vue-toastification";
 import router from "../router";

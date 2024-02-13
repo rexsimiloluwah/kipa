@@ -2,8 +2,11 @@ package repository
 
 import (
 	"keeper/internal/models"
+	"keeper/internal/utils"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type IUserRepository interface {
@@ -36,9 +39,11 @@ type IBucketRepository interface {
 	FindBucketByID(id string) (*models.Bucket, error)
 	FindBucketByUID(uid string) (*models.Bucket, error)
 	FindBucketsByUserID(userID string) ([]models.Bucket, error)
+	FindBucketsByUserIDPaged(userID string, filter bson.M, findOpts *options.FindOptions, paginationParams utils.PaginationParams) ([]models.Bucket, utils.PageInfo, error)
 }
 
 type IBucketItemRepository interface {
+	FindBucketItemsPaged(filter bson.M, opts *options.FindOptions, paginationParams utils.PaginationParams) ([]models.BucketItem, utils.PageInfo, error)
 	FindBucketItems(bucketUID string) ([]models.BucketItem, error)
 	CreateBucketItem(bucketItem *models.BucketItem) (primitive.ObjectID, error)
 	UpdateBucketItem(bucketItem *models.BucketItem, key string) error

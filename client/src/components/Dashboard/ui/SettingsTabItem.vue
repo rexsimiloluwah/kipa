@@ -1,5 +1,8 @@
 <template>
-  <div v-if="selectedTab === title" class="bg-white p-5 shadow-lg">
+  <div
+    v-if="selectedTab === title"
+    class="bg-white p-5 shadow-lg"
+  >
     <slot />
   </div>
 </template>

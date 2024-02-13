@@ -1,38 +1,34 @@
 <template>
   <main>
-    <Navbar />
+    <NavBar />
     <Hero />
     <About />
     <HowKipaWorks />
     <StayUpdated />
-    <Footer />
+    <FooterSection />
   </main>
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import Navbar from "../components/shared/Navbar.vue";
-import Button from "../components/shared/Button.vue";
-import Hero from "../components/shared/Hero.vue";
+import { Hero, NavBar } from "../components/shared";
 import About from "../components/About.vue";
 import HowKipaWorks from "../components/HowKipaWorks.vue";
 import StayUpdated from "../components/StayUpdated.vue";
-import Footer from "../components/Footer.vue";
+import FooterSection from "../components/Footer.vue";
 
 export default defineComponent({
   name: "Home",
   components: {
-    Navbar,
-    Button,
+    NavBar,
     Hero,
     About,
     HowKipaWorks,
     StayUpdated,
-    Footer,
+    FooterSection,
   },
   setup() {},
 });
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>

@@ -7,6 +7,66 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestConfig_New(t *testing.T) {
+	tt := []struct {
+		name    string
+		stubFn  func()
+		want    *Config
+		wantErr bool
+	}{
+		{
+			name: "should_return_default_config",
+			want: &Config{
+				Port:                     "1323",
+				Env:                      "development",
+				AccessTokenJwtExpiresIn:  "15m",
+				RefreshTokenJwtExpiresIn: "7d",
+				DbName:                   "keeper",
+			},
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.stubFn != nil {
+				tc.stubFn()
+			}
+			cfg := New()
+			require.Equal(t, cfg, tc.want)
+		})
+	}
+}
+
+func TestConfig_NewTest(t *testing.T) {
+	tt := []struct {
+		name    string
+		stubFn  func()
+		want    *Config
+		wantErr bool
+	}{
+		{
+			name: "should_return_default_test_config",
+			want: &Config{
+				Port:                     "1323",
+				Env:                      "test",
+				AccessTokenJwtExpiresIn:  "15m",
+				RefreshTokenJwtExpiresIn: "7d",
+				DbName:                   "keeper-go-test",
+			},
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.stubFn != nil {
+				tc.stubFn()
+			}
+			cfg := NewTest()
+			require.Equal(t, cfg, tc.want)
+		})
+	}
+}
+
 func TestConfig_GetEnv(t *testing.T) {
 	type args struct {
 		key          string

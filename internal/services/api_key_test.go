@@ -17,7 +17,9 @@ import (
 
 // Provide the mock APIKey service
 func provideMockAPIKeyService(mockAPIKeyRepo repository.IAPIKeyRepository) IAPIKeyService {
-	mockCfg := &config.Config{}
+	mockCfg := &config.Config{
+		Env: "test",
+	}
 	return NewAPIKeyService(mockCfg, mockAPIKeyRepo)
 }
 
@@ -581,3 +583,5 @@ func TestAPIKeyService_DeleteAPIKeys(t *testing.T) {
 		})
 	}
 }
+
+//TODO(me): testing the new API key handlers

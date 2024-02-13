@@ -17,8 +17,8 @@ import (
 )
 
 type APIKeyService struct {
-	ApiKeyRepository repository.IAPIKeyRepository
-	Cfg              *config.Config
+	apiKeyRepo repository.IAPIKeyRepository
+	Cfg        *config.Config
 }
 
 type IAPIKeyService interface {
@@ -34,8 +34,8 @@ type IAPIKeyService interface {
 
 func NewAPIKeyService(cfg *config.Config, apiKeyRepo repository.IAPIKeyRepository) IAPIKeyService {
 	return &APIKeyService{
-		Cfg:              cfg,
-		ApiKeyRepository: apiKeyRepo,
+		Cfg:        cfg,
+		apiKeyRepo: apiKeyRepo,
 	}
 }
 
@@ -59,7 +59,7 @@ func (a *APIKeyService) CreateAPIKey(data dto.CreateAPIKeyInputDTO, userID primi
 	var permissions models.APIKeyPermissionsList
 	if len(data.Permissions) == 0 {
 		// set the default api key permissions list (full access)
-		permissions = models.APIKeyPermissions
+		permissions = models.APIKEY_PERMISSIONS
 	} else {
 		permissions = data.Permissions
 	}
@@ -81,7 +81,7 @@ func (a *APIKeyService) CreateAPIKey(data dto.CreateAPIKeyInputDTO, userID primi
 	}
 
 	// save to database
-	id, err := a.ApiKeyRepository.CreateAPIKey(newAPIKey)
+	id, err := a.apiKeyRepo.CreateAPIKey(newAPIKey)
 	if err != nil {
 		logrus.WithError(err).Error("could not save api key to database")
 		return dto.CreateAPIKeyOutputDTO{}, err
@@ -98,7 +98,7 @@ func (a *APIKeyService) CreateAPIKey(data dto.CreateAPIKeyInputDTO, userID primi
 }
 
 func (a *APIKeyService) FindAPIKeyByID(id string) (*models.APIKey, error) {
-	apiKey, err := a.ApiKeyRepository.FindAPIKeyByID(id)
+	apiKey, err := a.apiKeyRepo.FindAPIKeyByID(id)
 	if err != nil {
 		return &models.APIKey{}, err
 	}
@@ -106,7 +106,7 @@ func (a *APIKeyService) FindAPIKeyByID(id string) (*models.APIKey, error) {
 }
 
 func (a *APIKeyService) FindUserAPIKeys(userID string) ([]models.APIKey, error) {
-	apiKeys, err := a.ApiKeyRepository.FindUserAPIKeys(userID)
+	apiKeys, err := a.apiKeyRepo.FindUserAPIKeys(userID)
 	if err != nil {
 		return []models.APIKey{}, err
 	}
@@ -126,14 +126,14 @@ func (a *APIKeyService) UpdateAPIKey(id string, data dto.UpdateAPIKeyInputDTO) e
 	}
 	apiKey.ID = ID
 	apiKey.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
-	if err := a.ApiKeyRepository.UpdateAPIKey(apiKey); err != nil {
+	if err := a.apiKeyRepo.UpdateAPIKey(apiKey); err != nil {
 		return err
 	}
 	return nil
 }
 
 func (a *APIKeyService) RevokeAPIKey(id string) error {
-	err := a.ApiKeyRepository.RevokeAPIKey(id)
+	err := a.apiKeyRepo.RevokeAPIKey(id)
 	if err != nil {
 		return err
 	}
@@ -141,7 +141,7 @@ func (a *APIKeyService) RevokeAPIKey(id string) error {
 }
 
 func (a *APIKeyService) RevokeAPIKeys(ids []string) error {
-	err := a.ApiKeyRepository.RevokeAPIKeys(ids)
+	err := a.apiKeyRepo.RevokeAPIKeys(ids)
 	if err != nil {
 		return err
 	}
@@ -149,7 +149,7 @@ func (a *APIKeyService) RevokeAPIKeys(ids []string) error {
 }
 
 func (a *APIKeyService) DeleteAPIKey(id string) error {
-	err := a.ApiKeyRepository.DeleteAPIKey(id)
+	err := a.apiKeyRepo.DeleteAPIKey(id)
 	if err != nil {
 		return err
 	}
@@ -157,7 +157,7 @@ func (a *APIKeyService) DeleteAPIKey(id string) error {
 }
 
 func (a *APIKeyService) DeleteAPIKeys(ids []string) error {
-	err := a.ApiKeyRepository.DeleteAPIKeys(ids)
+	err := a.apiKeyRepo.DeleteAPIKeys(ids)
 	if err != nil {
 		return err
 	}
